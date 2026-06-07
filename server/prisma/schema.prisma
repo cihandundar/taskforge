@@ -1,13 +1,204 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Get a free hosted Postgres database in seconds: `npx create-db`
+// TaskForge - Notion-like Database Schema
+// PostgreSQL Database
 
 generator client {
-  provider = "prisma-client"
-  output   = "../generated/prisma"
+  provider = "prisma-client-js"
 }
 
 datasource db {
   provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============= User Management =============
+model User {
+  id          String      @id @default(cuid())
+  email       String      @unique
+  name        String?
+  password    String      // Hashed password
+  avatar      String?
+  isActive    Boolean     @default(true)
+
+  // Relations
+  ownedSpaces Workspace[] @relation("WorkspaceOwner")
+  memberships WorkspaceMember[]
+  pages       Page[]
+  sessions    Session[]
+  comments    Comment[]
+
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  @@index([email])
+}
+
+model Session {
+  id           String    @id @default(cuid())
+  userId       String
+  user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  refreshToken String?   @unique
+  userAgent    String?
+  ipAddress    String?
+  expiresAt    DateTime
+  createdAt    DateTime  @default(now())
+
+  @@index([userId])
+  @@index([refreshToken])
+}
+
+// ============= Workspace System =============
+model Workspace {
+  id          String            @id @default(cuid())
+  name        String
+  icon        String?           // Emoji or icon
+  description String?           @db.Text
+
+  // Relations
+  ownerId     String
+  owner       User              @relation("WorkspaceOwner", fields: [ownerId], references: [id], onDelete: Cascade)
+  members     WorkspaceMember[]
+  pages       Page[]
+
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+
+  @@index([ownerId])
+}
+
+model WorkspaceMember {
+  id          String       @id @default(cuid())
+  workspaceId String
+  workspace   Workspace    @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  userId      String
+  user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role        MemberRole   @default(MEMBER)
+  joinedAt    DateTime     @default(now())
+
+  @@unique([workspaceId, userId])
+  @@index([workspaceId])
+  @@index([userId])
+}
+
+// ============= Page System =============
+model Page {
+  id          String    @id @default(cuid())
+  title       String    @default("Untitled")
+  icon        String?   // Emoji
+  cover       String?   // Cover image URL
+  isPublic    Boolean   @default(false)
+  isDeleted   Boolean   @default(false)
+  deletedAt   DateTime?
+
+  // Relations
+  workspaceId String?
+  workspace   Workspace? @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  parentId    String?
+  parent      Page?     @relation("PageHierarchy", fields: [parentId], references: [id], onDelete: Cascade)
+  children    Page[]    @relation("PageHierarchy")
+  authorId    String
+  author      User      @relation(fields: [authorId], references: [id], onDelete: Cascade)
+
+  // Content Relations
+  blocks    Block[]
+  comments  Comment[]
+
+  // Metadata
+  lastEditedAt DateTime  @default(now())
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  @@index([workspaceId])
+  @@index([authorId])
+  @@index([parentId])
+  @@index([isDeleted])
+}
+
+// ============= Block System (Notion's Core) =============
+model Block {
+  id        String   @id @default(cuid())
+  type      BlockType
+  content   String?  @db.Text  // JSON content for rich text
+  props     Json?              // Block-specific properties
+
+  // Relations
+  pageId    String
+  page      Page     @relation(fields: [pageId], references: [id], onDelete: Cascade)
+  parentId  String?
+  parent    Block?   @relation("BlockHierarchy", fields: [parentId], references: [id], onDelete: Cascade)
+  children  Block[]  @relation("BlockHierarchy")
+
+  // Position & Metadata
+  position  Int      // Order within parent
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([pageId])
+  @@index([parentId])
+  @@index([position])
+}
+
+// ============= Comments System =============
+model Comment {
+  id        String   @id @default(cuid())
+  content   String   @db.Text
+  resolved  Boolean  @default(false)
+
+  // Relations
+  pageId    String
+  page      Page     @relation(fields: [pageId], references: [id], onDelete: Cascade)
+  authorId  String
+  author    User     @relation(fields: [authorId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([pageId])
+  @@index([resolved])
+}
+
+// ============= Enums =============
+enum BlockType {
+  // Text blocks
+  PARAGRAPH
+  HEADING_1
+  HEADING_2
+  HEADING_3
+  QUOTE
+  CODE
+  CALLOUT
+
+  // List blocks
+  BULLETED_LIST
+  NUMBERED_LIST
+  TO_DO
+
+  // Media blocks
+  IMAGE
+  VIDEO
+  FILE
+  EMBED
+
+  // Layout blocks
+  DIVIDER
+  COLUMN
+  COLUMN_LIST
+
+  // Database/View blocks
+  TABLE_VIEW
+  BOARD_VIEW
+  CALENDAR_VIEW
+  GALLERY_VIEW
+  LIST_VIEW
+
+  // Interactive blocks
+  TOGGLE
+  SYNCED_BLOCK
+  BOOKMARK
+}
+
+enum MemberRole {
+  OWNER
+  ADMIN
+  MEMBER
+  GUEST
 }

@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm install:*)",
+      "Bash(timeout 10 curl:*)",
+      "Bash(npm run:*)",
+      "Bash(npx prisma:*)",
+      "Bash(curl:*)"
+    ]
+  }
+}
