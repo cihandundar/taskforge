@@ -25,6 +25,7 @@ model User {
   pages       Page[]
   sessions    Session[]
   comments    Comment[]
+  blocks      Block[]
 
   createdAt   DateTime    @default(now())
   updatedAt   DateTime    @updatedAt
@@ -126,6 +127,8 @@ model Block {
   parentId  String?
   parent    Block?   @relation("BlockHierarchy", fields: [parentId], references: [id], onDelete: Cascade)
   children  Block[]  @relation("BlockHierarchy")
+  authorId  String?
+  author    User?    @relation(fields: [authorId], references: [id], onDelete: SetNull)
 
   // Position & Metadata
   position  Int      // Order within parent
@@ -135,6 +138,7 @@ model Block {
   @@index([pageId])
   @@index([parentId])
   @@index([position])
+  @@index([authorId])
 }
 
 // ============= Comments System =============
