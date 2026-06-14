@@ -290,33 +290,6 @@ describe('Workspaces API (e2e)', () => {
     });
   });
 
-  describe('POST /api/workspaces/:id/leave', () => {
-    let memberAuthToken: string;
-
-    beforeAll(async () => {
-      // Login as the member user
-      const res = await request(app.getHttpServer())
-        .post('/api/auth/login')
-        .send({
-          email: 'member-test@example.com',
-          password: 'Test123!',
-        });
-
-      memberAuthToken = res.body.data.tokens.accessToken;
-    });
-
-    it('should allow member to leave workspace', () => {
-      return request(app.getHttpServer())
-        .post(`/api/workspaces/${workspaceId}/leave`)
-        .set('Authorization', `Bearer ${memberAuthToken}`)
-        .expect(200)
-        .expect((res) => {
-          expect(res.body.success).toBe(true);
-          expect(res.body.message).toBe('Left workspace successfully');
-        });
-    });
-  });
-
   describe('DELETE /api/workspaces/:id', () => {
     it('should delete workspace as owner', () => {
       return request(app.getHttpServer())
@@ -333,6 +306,69 @@ describe('Workspaces API (e2e)', () => {
       return request(app.getHttpServer())
         .get(`/api/workspaces/${workspaceId}`)
         .set('Authorization', `Bearer ${authToken}`)
+        .expect(403);
+    });
+  });
+
+  describe('POST /api/workspaces/:id/leave', () => {
+    let memberWorkspaceId: string;
+    let memberAuthToken: string;
+
+    beforeAll(async () => {
+      // Create a new workspace for leave test
+      const wsRes = await request(app.getHttpServer())
+        .post('/api/workspaces')
+        .set('Authorization', `Bearer ${authToken}`)
+        .send({
+          name: 'Test Workspace for Leave',
+        })
+        .expect(201);
+
+      memberWorkspaceId = wsRes.body.data.id;
+
+      // Create a second user and login
+      await request(app.getHttpServer())
+        .post('/api/auth/register')
+        .send({
+          email: 'leave-test@example.com',
+          password: 'Test123!',
+          name: 'Leave Test User',
+        });
+
+      const loginRes = await request(app.getHttpServer())
+        .post('/api/auth/login')
+        .send({
+          email: 'leave-test@example.com',
+          password: 'Test123!',
+        });
+
+      memberAuthToken = loginRes.body.data.tokens.accessToken;
+
+      // Add member to workspace
+      await request(app.getHttpServer())
+        .post(`/api/workspaces/${memberWorkspaceId}/members`)
+        .set('Authorization', `Bearer ${authToken}`)
+        .send({
+          email: 'leave-test@example.com',
+          role: 'MEMBER',
+        });
+    });
+
+    it('should allow member to leave workspace', () => {
+      return request(app.getHttpServer())
+        .post(`/api/workspaces/${memberWorkspaceId}/leave`)
+        .set('Authorization', `Bearer ${memberAuthToken}`)
+        .expect(200)
+        .expect((res) => {
+          expect(res.body.success).toBe(true);
+          expect(res.body.message).toBe('Left workspace successfully');
+        });
+    });
+
+    it('should not allow left member to access workspace', () => {
+      return request(app.getHttpServer())
+        .get(`/api/workspaces/${memberWorkspaceId}`)
+        .set('Authorization', `Bearer ${memberAuthToken}`)
         .expect(403);
     });
   });

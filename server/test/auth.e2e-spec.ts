@@ -3,6 +3,7 @@ import { INestApplication, ValidationPipe } from '@nestjs/common';
 import supertest from 'supertest';
 import { AppModule } from './../src/app.module';
 import { PrismaService } from '../src/common/prisma/prisma.service';
+import { HttpExceptionFilter } from '../src/common/filters/http-exception.filter';
 
 describe('AuthController (e2e)', () => {
   let app: INestApplication;
@@ -20,6 +21,7 @@ describe('AuthController (e2e)', () => {
 
     // Set up the same configuration as the main app
     app.setGlobalPrefix('api');
+    app.useGlobalFilters(new HttpExceptionFilter());
     app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
     app.enableCors();
 

@@ -203,7 +203,7 @@ export class PagesService {
   /**
    * Get a specific page
    */
-  async findOne(id: string, userId: string) {
+  async findOne(id: string, userId: string, includeDeleted = false) {
     const page = await this.prisma.page.findUnique({
       where: { id },
       include: {
@@ -242,7 +242,7 @@ export class PagesService {
       throw new NotFoundException('Page not found');
     }
 
-    if (page.isDeleted) {
+    if (!includeDeleted && page.isDeleted) {
       throw new NotFoundException('Page has been deleted');
     }
 
@@ -324,8 +324,8 @@ export class PagesService {
       }
 
       // Check for circular reference
-      let currentParent = parentPage;
-      while (currentParent.parentId) {
+      let currentParent: typeof parentPage | null = parentPage;
+      while (currentParent?.parentId) {
         if (currentParent.parentId === id) {
           throw new BadRequestException('Circular parent reference detected');
         }
@@ -389,14 +389,8 @@ export class PagesService {
    * Restore deleted page
    */
   async restore(id: string, userId: string) {
-    // Check page exists and user has access
-    const page = await this.prisma.page.findUnique({
-      where: { id },
-    });
-
-    if (!page) {
-      throw new NotFoundException('Page not found');
-    }
+    // Check page exists and user has access (include deleted pages)
+    const page = await this.findOne(id, userId, true);
 
     if (!page.isDeleted) {
       throw new BadRequestException('Page is not deleted');

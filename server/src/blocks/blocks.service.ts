@@ -7,7 +7,7 @@ import {
 import { PrismaService } from '../common/prisma/prisma.service';
 import { CreateBlockDto } from './dto/create-block.dto';
 import { UpdateBlockDto } from './dto/update-block.dto';
-import { BlockType } from '@prisma/client';
+import { BlockType, Prisma } from '@prisma/client';
 
 @Injectable()
 export class BlocksService {
@@ -84,8 +84,8 @@ export class BlocksService {
     const block = await this.prisma.block.create({
       data: {
         type: type as BlockType,
-        content: content ? JSON.stringify(content) : null,
-        props: props ? JSON.stringify(props) : null,
+        content: content ? JSON.stringify(content) : undefined,
+        props: props ? JSON.stringify(props) : undefined,
         pageId,
         parentId,
         position: nextPosition,
@@ -107,8 +107,8 @@ export class BlocksService {
     // Parse JSON fields for response
     return {
       ...block,
-      content: block.content ? JSON.parse(block.content) : null,
-      props: block.props ? JSON.parse(block.props) : null,
+      content: block.content ? JSON.parse(block.content as string) : null,
+      props: block.props ? JSON.parse(block.props as string) : null,
     };
   }
 
@@ -168,8 +168,8 @@ export class BlocksService {
     // Parse JSON fields
     return blocks.map((block) => ({
       ...block,
-      content: block.content ? JSON.parse(block.content) : null,
-      props: block.props ? JSON.parse(block.props) : null,
+      content: block.content ? JSON.parse(block.content as string) : null,
+      props: block.props ? JSON.parse(block.props as string) : null,
     }));
   }
 
@@ -225,8 +225,8 @@ export class BlocksService {
     // Parse JSON fields
     return {
       ...block,
-      content: block.content ? JSON.parse(block.content) : null,
-      props: block.props ? JSON.parse(block.props) : null,
+      content: block.content ? JSON.parse(block.content as string) : null,
+      props: block.props ? JSON.parse(block.props as string) : null,
     };
   }
 
@@ -241,11 +241,11 @@ export class BlocksService {
     const updateData: any = {};
 
     if (updateBlockDto.content !== undefined) {
-      updateData.content = JSON.stringify(updateBlockDto.content);
+      updateData.content = JSON.stringify(updateBlockDto.content ?? {});
     }
 
     if (updateBlockDto.props !== undefined) {
-      updateData.props = JSON.stringify(updateBlockDto.props);
+      updateData.props = JSON.stringify(updateBlockDto.props ?? {});
     }
 
     if (updateBlockDto.type !== undefined) {
@@ -272,8 +272,8 @@ export class BlocksService {
     // Parse JSON fields
     return {
       ...updatedBlock,
-      content: updatedBlock.content ? JSON.parse(updatedBlock.content) : null,
-      props: updatedBlock.props ? JSON.parse(updatedBlock.props) : null,
+      content: updatedBlock.content ? (JSON.parse(updatedBlock.content as string) as any) : null,
+      props: updatedBlock.props ? (JSON.parse(updatedBlock.props as string) as any) : null,
     };
   }
 
@@ -352,21 +352,58 @@ export class BlocksService {
    * Duplicate block
    */
   async duplicate(id: string, userId: string) {
-    // Get original block
-    const originalBlock = await this.findOne(id, userId);
+    // Get block directly without findOne to avoid deleted page issues
+    const block = await this.prisma.block.findUnique({
+      where: { id },
+      include: {
+        page: {
+          include: { workspace: true },
+        },
+        author: {
+          select: {
+            id: true,
+            email: true,
+            name: true,
+            avatar: true,
+          },
+        },
+      },
+    });
+
+    if (!block) {
+      throw new NotFoundException('Block not found');
+    }
+
+    // Check access permissions via page
+    const page = block.page;
+    const hasAccess =
+      page.authorId === userId ||
+      (page.workspaceId &&
+        (await this.prisma.workspaceMember.findUnique({
+          where: {
+            workspaceId_userId: {
+              workspaceId: page.workspaceId,
+              userId,
+            },
+          },
+        }))) !== null;
+
+    if (!hasAccess) {
+      throw new ForbiddenException('You do not have access to this block');
+    }
 
     // Get next position
-    const maxPosition = originalBlock.parentId
+    const maxPosition = block.parentId
       ? (
           await this.prisma.block.findMany({
-            where: { parentId: originalBlock.parentId },
+            where: { parentId: block.parentId },
             orderBy: { position: 'desc' },
             take: 1,
           })
         )[0]?.position
       : (
           await this.prisma.block.findMany({
-            where: { pageId: originalBlock.pageId, parentId: null },
+            where: { pageId: block.pageId, parentId: null },
             orderBy: { position: 'desc' },
             take: 1,
           })
@@ -377,11 +414,11 @@ export class BlocksService {
     // Create duplicated block
     const duplicatedBlock = await this.prisma.block.create({
       data: {
-        type: originalBlock.type,
-        content: originalBlock.content,
-        props: originalBlock.props,
-        pageId: originalBlock.pageId,
-        parentId: originalBlock.parentId,
+        type: block.type,
+        content: block.content || undefined,
+        props: block.props || undefined,
+        pageId: block.pageId,
+        parentId: block.parentId,
         position: nextPosition,
         authorId: userId,
       },
@@ -400,8 +437,8 @@ export class BlocksService {
     // Parse JSON fields
     return {
       ...duplicatedBlock,
-      content: duplicatedBlock.content ? JSON.parse(duplicatedBlock.content) : null,
-      props: duplicatedBlock.props ? JSON.parse(duplicatedBlock.props) : null,
+      content: duplicatedBlock.content ? (JSON.parse(duplicatedBlock.content as string) as any) : null,
+      props: duplicatedBlock.props ? (JSON.parse(duplicatedBlock.props as string) as any) : null,
     };
   }
 
@@ -431,8 +468,8 @@ export class BlocksService {
     // Parse JSON fields
     return children.map((block) => ({
       ...block,
-      content: block.content ? JSON.parse(block.content) : null,
-      props: block.props ? JSON.parse(block.props) : null,
+      content: block.content ? JSON.parse(block.content as string) : null,
+      props: block.props ? JSON.parse(block.props as string) : null,
     }));
   }
 }

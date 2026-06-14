@@ -6,6 +6,7 @@ import { AuthModule } from './auth/auth.module';
 import { WorkspacesModule } from './workspaces/workspace.module';
 import { PagesModule } from './pages/pages.module';
 import { BlocksModule } from './blocks/blocks.module';
+import { CommentsModule } from './comments/comments.module';
 
 @Module({
   imports: [
@@ -17,6 +18,7 @@ import { BlocksModule } from './blocks/blocks.module';
     WorkspacesModule,
     PagesModule,
     BlocksModule,
+    CommentsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

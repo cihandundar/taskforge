@@ -212,6 +212,11 @@ export class AuthService {
     const expiresAt = new Date();
     expiresAt.setDate(expiresAt.getDate() + 7); // 7 days from now
 
+    // Delete existing sessions for this user to avoid duplicate refresh tokens
+    await this.prisma.session.deleteMany({
+      where: { userId },
+    });
+
     await this.prisma.session.create({
       data: {
         userId,

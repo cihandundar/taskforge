@@ -275,26 +275,36 @@ describe('Pages API (e2e)', () => {
   });
 
   describe('GET /api/pages/:id/children', () => {
-    it('should get page children', () => {
-      // Create a new child page since previous one was deleted
-      return request(app.getHttpServer())
+    let parentPageId: string;
+
+    beforeAll(async () => {
+      // Create a fresh parent page for children tests
+      const res = await request(app.getHttpServer())
         .post('/api/pages')
         .set('Authorization', `Bearer ${authToken}`)
         .send({
-          title: 'New Child Page',
-          parentId: pageId,
-        })
-        .expect(201)
-        .expect(() => {
-          // Now get children
-          request(app.getHttpServer())
-            .get(`/api/pages/${pageId}/children`)
-            .set('Authorization', `Bearer ${authToken}`)
-            .expect(200)
-            .expect((res) => {
-              expect(res.body.success).toBe(true);
-              expect(Array.isArray(res.body.data)).toBe(true);
-            });
+          title: 'Parent Page for Children',
+        });
+      parentPageId = res.body.data.id;
+
+      // Add a child
+      await request(app.getHttpServer())
+        .post('/api/pages')
+        .set('Authorization', `Bearer ${authToken}`)
+        .send({
+          title: 'Child Page',
+          parentId: parentPageId,
+        });
+    });
+
+    it('should get page children', () => {
+      return request(app.getHttpServer())
+        .get(`/api/pages/${parentPageId}/children`)
+        .set('Authorization', `Bearer ${authToken}`)
+        .expect(200)
+        .expect((res) => {
+          expect(res.body.success).toBe(true);
+          expect(Array.isArray(res.body.data)).toBe(true);
         });
     });
   });
@@ -307,13 +317,15 @@ describe('Pages API (e2e)', () => {
         .set('Authorization', `Bearer ${authToken}`)
         .send({
           title: 'To Be Deleted',
-        });
+        })
+        .expect(201);
 
       const tempPageId = createRes.body.data.id;
 
       await request(app.getHttpServer())
         .delete(`/api/pages/${tempPageId}`)
-        .set('Authorization', `Bearer ${authToken}`);
+        .set('Authorization', `Bearer ${authToken}`)
+        .expect(200);
 
       // Restore it
       return request(app.getHttpServer())
@@ -326,31 +338,43 @@ describe('Pages API (e2e)', () => {
         });
     });
 
-    it('should fail to restore non-deleted page', () => {
+    it('should fail to restore non-deleted page', async () => {
+      // Create a fresh page
+      const createRes = await request(app.getHttpServer())
+        .post('/api/pages')
+        .set('Authorization', `Bearer ${authToken}`)
+        .send({
+          title: 'Active Page',
+        })
+        .expect(201);
+
+      const activePageId = createRes.body.data.id;
+
       return request(app.getHttpServer())
-        .post(`/api/pages/${pageId}/restore`)
+        .post(`/api/pages/${activePageId}/restore`)
         .set('Authorization', `Bearer ${authToken}`)
         .expect(400);
     });
   });
 
   describe('DELETE /api/pages/:id', () => {
-    let pageToDelete: string;
+    let deletedPageId: string;
 
-    beforeAll(async () => {
-      const res = await request(app.getHttpServer())
+    it('should delete page as author', async () => {
+      // First create a page to delete
+      const createRes = await request(app.getHttpServer())
         .post('/api/pages')
         .set('Authorization', `Bearer ${authToken}`)
         .send({
           title: 'Page to Delete',
-        });
+        })
+        .expect(201);
 
-      pageToDelete = res.body.data.id;
-    });
+      deletedPageId = createRes.body.data.id;
 
-    it('should delete page as author', () => {
+      // Now delete it
       return request(app.getHttpServer())
-        .delete(`/api/pages/${pageToDelete}`)
+        .delete(`/api/pages/${deletedPageId}`)
         .set('Authorization', `Bearer ${authToken}`)
         .expect(200)
         .expect((res) => {
@@ -361,19 +385,41 @@ describe('Pages API (e2e)', () => {
 
     it('should not find deleted page', () => {
       return request(app.getHttpServer())
-        .get(`/api/pages/${pageToDelete}`)
+        .get(`/api/pages/${deletedPageId}`)
         .set('Authorization', `Bearer ${authToken}`)
         .expect(404);
     });
 
-    it('should fail without authentication', () => {
+    it('should fail without authentication', async () => {
+      // Create a new page for auth test
+      const createRes = await request(app.getHttpServer())
+        .post('/api/pages')
+        .set('Authorization', `Bearer ${authToken}`)
+        .send({
+          title: 'Auth Test Page',
+        })
+        .expect(201);
+
+      const testPageId = createRes.body.data.id;
+
       return request(app.getHttpServer())
-        .delete(`/api/pages/${pageId}`)
+        .delete(`/api/pages/${testPageId}`)
         .expect(401);
     });
   });
 
   describe('Search Pages', () => {
+    beforeAll(async () => {
+      // Create search test data
+      await request(app.getHttpServer())
+        .post('/api/pages')
+        .set('Authorization', `Bearer ${authToken}`)
+        .send({
+          title: 'Updated Search Test Page',
+          workspaceId: workspaceId,
+        });
+    });
+
     it('should search pages by title', () => {
       return request(app.getHttpServer())
         .get('/api/pages/search?q=Updated')

@@ -16,7 +16,11 @@ interface FormErrors {
   password?: string;
 }
 
-export default function LoginForm() {
+interface LoginFormProps {
+  redirectPath?: string;
+}
+
+export default function LoginForm({ redirectPath = '/dashboard' }: LoginFormProps) {
   const router = useRouter();
   const { login } = useAuth();
   const [formData, setFormData] = useState<FormData>({
@@ -60,8 +64,8 @@ export default function LoginForm() {
         password: formData.password,
       });
 
-      // Redirect to dashboard after successful login
-      router.push('/dashboard');
+      // Redirect to dashboard or original destination
+      router.push(redirectPath);
     } catch (error: any) {
       setServerError(
         error.response?.data?.message ||

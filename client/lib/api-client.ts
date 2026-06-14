@@ -1,7 +1,15 @@
 import axios, { AxiosInstance, InternalAxiosRequestConfig, AxiosResponse } from 'axios';
+import Cookies from 'js-cookie';
 
 // API base URL
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
+
+// Cookie names
+const COOKIE_NAMES = {
+  ACCESS: 'taskforge_access_token',
+  REFRESH: 'taskforge_refresh_token',
+  USER: 'taskforge_user',
+};
 
 export interface ApiError {
   success: false;
@@ -115,29 +123,36 @@ class ApiClient {
     );
   }
 
-  // Token management
+  // Token management - store in both cookie and localStorage
   public getToken(): string | null {
     if (typeof window === 'undefined') return null;
-    return localStorage.getItem('accessToken');
+    // Try cookie first (for middleware), fallback to localStorage
+    return Cookies.get(COOKIE_NAMES.ACCESS) || localStorage.getItem('accessToken');
   }
 
   public setToken(token: string): void {
     if (typeof window === 'undefined') return;
+    // Store in cookie (7 days, same as refresh token for simplicity)
+    Cookies.set(COOKIE_NAMES.ACCESS, token, { expires: 7, path: '/' });
+    // Also store in localStorage as backup
     localStorage.setItem('accessToken', token);
   }
 
   public getRefreshToken(): string | null {
     if (typeof window === 'undefined') return null;
-    return localStorage.getItem('refreshToken');
+    return Cookies.get(COOKIE_NAMES.REFRESH) || localStorage.getItem('refreshToken');
   }
 
   public setRefreshToken(token: string): void {
     if (typeof window === 'undefined') return;
+    Cookies.set(COOKIE_NAMES.REFRESH, token, { expires: 7, path: '/' });
     localStorage.setItem('refreshToken', token);
   }
 
   public clearTokens(): void {
     if (typeof window === 'undefined') return;
+    Cookies.remove(COOKIE_NAMES.ACCESS, { path: '/' });
+    Cookies.remove(COOKIE_NAMES.REFRESH, { path: '/' });
     localStorage.removeItem('accessToken');
     localStorage.removeItem('refreshToken');
   }
@@ -196,19 +211,23 @@ class ApiClient {
 
   // Public method to get current user
   getCurrentUser(): User | null {
-    const userStr = typeof window !== 'undefined' ? localStorage.getItem('user') : null;
+    if (typeof window === 'undefined') return null;
+    const userStr = Cookies.get(COOKIE_NAMES.USER) || localStorage.getItem('user');
     return userStr ? JSON.parse(userStr) : null;
   }
 
   // Public method to set current user
   setCurrentUser(user: User): void {
     if (typeof window === 'undefined') return;
-    localStorage.setItem('user', JSON.stringify(user));
+    const userStr = JSON.stringify(user);
+    Cookies.set(COOKIE_NAMES.USER, userStr, { expires: 7, path: '/' });
+    localStorage.setItem('user', userStr);
   }
 
   // Public method to clear current user
   clearCurrentUser(): void {
     if (typeof window === 'undefined') return;
+    Cookies.remove(COOKIE_NAMES.USER, { path: '/' });
     localStorage.removeItem('user');
   }
 }

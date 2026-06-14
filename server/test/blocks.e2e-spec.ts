@@ -432,20 +432,21 @@ describe('Blocks API (e2e)', () => {
   describe('DELETE /api/blocks/:id', () => {
     let blockToDelete: string;
 
-    beforeAll(async () => {
-      const res = await request(app.getHttpServer())
+    it('should delete block', async () => {
+      // Create a block to delete
+      const createRes = await request(app.getHttpServer())
         .post('/api/blocks')
         .set('Authorization', `Bearer ${authToken}`)
         .send({
           type: BlockType.PARAGRAPH,
           content: { text: 'To be deleted' },
           pageId: pageId,
-        });
+        })
+        .expect(201);
 
-      blockToDelete = res.body.data.id;
-    });
+      blockToDelete = createRes.body.data.id;
 
-    it('should delete block', () => {
+      // Delete it
       return request(app.getHttpServer())
         .delete(`/api/blocks/${blockToDelete}`)
         .set('Authorization', `Bearer ${authToken}`)
@@ -463,9 +464,35 @@ describe('Blocks API (e2e)', () => {
         .expect(404);
     });
 
-    it('should fail to delete block with children', () => {
+    it('should fail to delete block with children', async () => {
+      // Create a block with a child
+      const parentRes = await request(app.getHttpServer())
+        .post('/api/blocks')
+        .set('Authorization', `Bearer ${authToken}`)
+        .send({
+          type: BlockType.PARAGRAPH,
+          content: { text: 'Parent with children' },
+          pageId: pageId,
+        })
+        .expect(201);
+
+      const parentBlockId = parentRes.body.data.id;
+
+      // Add a child
+      await request(app.getHttpServer())
+        .post('/api/blocks')
+        .set('Authorization', `Bearer ${authToken}`)
+        .send({
+          type: BlockType.BULLETED_LIST,
+          content: { text: 'Child block' },
+          pageId: pageId,
+          parentId: parentBlockId,
+        })
+        .expect(201);
+
+      // Try to delete parent - should fail
       return request(app.getHttpServer())
-        .delete(`/api/blocks/${blockId}`)
+        .delete(`/api/blocks/${parentBlockId}`)
         .set('Authorization', `Bearer ${authToken}`)
         .expect(400);
     });
