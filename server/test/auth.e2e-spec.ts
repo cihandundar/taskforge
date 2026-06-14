@@ -35,7 +35,12 @@ describe('AuthController (e2e)', () => {
   });
 
   afterAll(async () => {
-    // Clean up after tests
+    // Clean up after tests (respect foreign key constraints)
+    await prismaService.comment.deleteMany();
+    await prismaService.block.deleteMany();
+    await prismaService.page.deleteMany();
+    await prismaService.workspaceMember.deleteMany();
+    await prismaService.workspace.deleteMany();
     await prismaService.session.deleteMany();
     await prismaService.user.deleteMany();
 
