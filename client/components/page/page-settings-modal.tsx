@@ -19,7 +19,7 @@ const EMOJIS = [
 ];
 
 const COVERS = [
-  '', // No cover
+  '',
   'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
   'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
   'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
@@ -30,7 +30,7 @@ const COVERS = [
   'linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%)',
 ];
 
-export default function PageSettingsModal({
+export function PageSettingsModal({
   isOpen,
   onClose,
   onUpdate,
@@ -49,37 +49,25 @@ export default function PageSettingsModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
-      {/* Backdrop */}
       <div
         className="fixed inset-0 bg-black bg-opacity-50 transition-opacity"
         onClick={onClose}
       />
-
-      {/* Modal */}
       <div className="relative bg-white rounded-2xl shadow-xl max-w-lg w-full mx-4 max-h-[90vh] overflow-y-auto">
-        {/* Close Button */}
         <button
           onClick={onClose}
           className="absolute top-4 right-4 p-2 rounded-lg hover:bg-gray-100 transition z-10"
         >
           <XMarkIcon className="w-5 h-5 text-gray-500" />
         </button>
-
-        {/* Content */}
         <div className="p-6">
           <div className="mb-6">
             <h2 className="text-2xl font-bold text-gray-900">Page Settings</h2>
-            <p className="text-gray-600 mt-1">
-              Customize your page appearance
-            </p>
+            <p className="text-gray-600 mt-1">Customize your page appearance</p>
           </div>
-
           <div className="space-y-6">
-            {/* Icon Selection */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-3">
-                Page Icon
-              </label>
+              <label className="block text-sm font-medium text-gray-700 mb-3">Page Icon</label>
               <div className="grid grid-cols-8 gap-2">
                 {EMOJIS.map((emoji) => (
                   <button
@@ -97,12 +85,8 @@ export default function PageSettingsModal({
                 ))}
               </div>
             </div>
-
-            {/* Cover Selection */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-3">
-                Cover Image
-              </label>
+              <label className="block text-sm font-medium text-gray-700 mb-3">Cover Image</label>
               <div className="grid grid-cols-2 gap-2">
                 {COVERS.map((cover, index) => (
                   <button
@@ -116,15 +100,11 @@ export default function PageSettingsModal({
                     }`}
                     style={cover ? { background: cover } : {}}
                   >
-                    {!cover && (
-                      <span className="text-gray-400 text-sm">No Cover</span>
-                    )}
+                    {!cover && <span className="text-gray-400 text-sm">No Cover</span>}
                   </button>
                 ))}
               </div>
             </div>
-
-            {/* Preview */}
             <div className="p-4 bg-gray-50 rounded-lg">
               <p className="text-xs text-gray-500 mb-2">Preview</p>
               <div className="flex items-center space-x-3">
@@ -135,8 +115,6 @@ export default function PageSettingsModal({
               </div>
             </div>
           </div>
-
-          {/* Actions */}
           <div className="flex space-x-3 pt-6">
             <button
               type="button"

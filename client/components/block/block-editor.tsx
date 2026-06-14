@@ -40,24 +40,28 @@ export function BlockEditor({ pageId }: BlockEditorProps) {
 
   // Handle custom events for block operations
   useEffect(() => {
-    const handleCreateNewBlock = async (e: CustomEvent) => {
-      const { afterBlockId } = e.detail;
-      const newBlock = await createParagraph();
-      setFocusedBlockId(newBlock.id);
+    const handleCreateNewBlock = (e: Event) => {
+      const customEvent = e as CustomEvent;
+      const { afterBlockId } = customEvent.detail;
+      createParagraph().then((block) => {
+        setFocusedBlockId(block.id);
+      });
     };
 
-    const handleDeleteEmptyBlock = async (e: CustomEvent) => {
-      const { blockId } = e.detail;
+    const handleDeleteEmptyBlock = (e: Event) => {
+      const customEvent = e as CustomEvent;
+      const { blockId } = customEvent.detail;
       const blockIndex = blocks.findIndex((b) => b.id === blockId);
       if (blockIndex > 0) {
         // Focus previous block
         setFocusedBlockId(blocks[blockIndex - 1].id);
       }
-      await deleteBlock(blockId);
+      deleteBlock(blockId);
     };
 
-    const handleOpenSlashMenu = (e: CustomEvent) => {
-      const { blockId } = e.detail;
+    const handleOpenSlashMenu = (e: Event) => {
+      const customEvent = e as CustomEvent;
+      const { blockId } = customEvent.detail;
       const blockEl = document.querySelector(`[data-block-id="${blockId}"]`);
       if (blockEl) {
         const rect = blockEl.getBoundingClientRect();
@@ -67,14 +71,14 @@ export function BlockEditor({ pageId }: BlockEditorProps) {
       }
     };
 
-    window.addEventListener('createNewBlock', handleCreateNewBlock as EventListener);
-    window.addEventListener('deleteEmptyBlock', handleDeleteEmptyBlock as EventListener);
-    window.addEventListener('openSlashMenu', handleOpenSlashMenu as EventListener);
+    window.addEventListener('createNewBlock', handleCreateNewBlock);
+    window.addEventListener('deleteEmptyBlock', handleDeleteEmptyBlock);
+    window.addEventListener('openSlashMenu', handleOpenSlashMenu);
 
     return () => {
-      window.removeEventListener('createNewBlock', handleCreateNewBlock as EventListener);
-      window.removeEventListener('deleteEmptyBlock', handleDeleteEmptyBlock as EventListener);
-      window.removeEventListener('openSlashMenu', handleOpenSlashMenu as EventListener);
+      window.removeEventListener('createNewBlock', handleCreateNewBlock);
+      window.removeEventListener('deleteEmptyBlock', handleDeleteEmptyBlock);
+      window.removeEventListener('openSlashMenu', handleOpenSlashMenu);
     };
   }, [blocks, deleteBlock, createParagraph]);
 

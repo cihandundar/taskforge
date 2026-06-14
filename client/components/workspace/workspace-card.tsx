@@ -17,6 +17,7 @@ interface WorkspaceCardProps {
     icon?: string;
     description?: string;
     role: string;
+    joinedAt?: string;
     _count?: {
       members: number;
       pages: number;

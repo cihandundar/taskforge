@@ -66,8 +66,8 @@ export function HeadingBlock({
         onChange={handleChange}
         onKeyDown={handleKeyDown}
         onFocus={onFocus}
-        placeholder={placeholder[level]}
-        className={`w-full min-h-[24px] resize-none outline-none text-gray-900 placeholder-gray-400 ${headingClasses[level]}`}
+        placeholder={placeholder[level as keyof typeof placeholder]}
+        className={`w-full min-h-[24px] resize-none outline-none text-gray-900 placeholder-gray-400 ${headingClasses[level as keyof typeof headingClasses]}`}
         rows={1}
         autoFocus={isFocused}
       />

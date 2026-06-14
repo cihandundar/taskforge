@@ -8,6 +8,9 @@ import {
   CodeBlock,
   TodoBlock,
   DividerBlock,
+  CalloutBlock,
+  BulletedListBlock,
+  NumberedListBlock,
 } from './blocks';
 import { useState, useRef, useCallback } from 'react';
 
@@ -119,9 +122,38 @@ export function BlockItem({
       case BlockType.DIVIDER:
         return <DividerBlock block={block} onDelete={onDelete} />;
 
-      // Placeholder for other block types
+      case BlockType.CALLOUT:
+        return (
+          <CalloutBlock
+            block={block}
+            onUpdate={onUpdate}
+            isFocused={isFocused}
+            onFocus={onFocus}
+          />
+        );
+
       case BlockType.BULLETED_LIST:
+        return (
+          <BulletedListBlock
+            block={block}
+            onUpdate={onUpdate}
+            isFocused={isFocused}
+            onFocus={onFocus}
+          />
+        );
+
       case BlockType.NUMBERED_LIST:
+        return (
+          <NumberedListBlock
+            block={block}
+            onUpdate={onUpdate}
+            isFocused={isFocused}
+            onFocus={onFocus}
+          />
+        );
+
+      // Placeholder for other block types
+      case BlockType.IMAGE:
       case BlockType.IMAGE:
       case BlockType.VIDEO:
       case BlockType.FILE:

@@ -58,7 +58,7 @@ export interface LoginData {
 }
 
 class ApiClient {
-  private client: AxiosInstance;
+  public client: AxiosInstance;
 
   constructor() {
     this.client = axios.create({

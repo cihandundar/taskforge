@@ -4,3 +4,6 @@ export { QuoteBlock } from './quote-block';
 export { CodeBlock } from './code-block';
 export { TodoBlock } from './todo-block';
 export { DividerBlock } from './divider-block';
+export { CalloutBlock } from './callout-block';
+export { BulletedListBlock } from './bulleted-list-block';
+export { NumberedListBlock } from './numbered-list-block';

@@ -9,7 +9,9 @@
       "Bash(npx tsx:*)",
       "Bash(node:*)",
       "Bash(taskkill:*)",
-      "Bash(findstr 4000:*)"
+      "Bash(findstr 4000:*)",
+      "Bash(sed:*)",
+      "Bash(rm:*)"
     ]
   }
 }

@@ -2,10 +2,11 @@
 
 import { useAuth } from '@/hooks/useAuth';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import {
   Bars3Icon,
   BellIcon,
-  SearchIcon,
+  MagnifyingGlassIcon,
   Cog6ToothIcon,
 } from '@heroicons/react/24/outline';
 import { useState } from 'react';
@@ -79,7 +80,7 @@ export default function Header({ workspaceId, workspaceName }: HeaderProps) {
           <div className="flex items-center space-x-3">
             {/* Search */}
             <div className="hidden md:flex items-center space-x-2 bg-gray-100 rounded-lg px-3 py-2">
-              <SearchIcon className="w-4 h-4 text-gray-500" />
+              <MagnifyingGlassIcon className="w-4 h-4 text-gray-500" />
               <input
                 type="text"
                 placeholder="Search..."
