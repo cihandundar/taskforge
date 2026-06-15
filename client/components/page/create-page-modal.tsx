@@ -33,12 +33,12 @@ export default function CreatePageModal({
     setError('');
 
     if (!title.trim()) {
-      setError('Page title is required');
+      setError('Sayfa başlığı gerekli');
       return;
     }
 
     if (title.length < 2) {
-      setError('Page title must be at least 2 characters');
+      setError('Sayfa başlığı en az 2 karakter olmalı');
       return;
     }
 
@@ -48,7 +48,7 @@ export default function CreatePageModal({
       await onCreate({ title, icon: selectedIcon });
       handleClose();
     } catch (err: any) {
-      setError(err.message || 'Failed to create page');
+      setError(err.message || 'Sayfa oluşturulamadı');
     } finally {
       setIsLoading(false);
     }
@@ -84,9 +84,9 @@ export default function CreatePageModal({
         {/* Content */}
         <div className="p-6">
           <div className="mb-6">
-            <h2 className="text-2xl font-bold text-gray-900">Create New Page</h2>
+            <h2 className="text-2xl font-bold text-gray-900">Yeni Sayfa Oluştur</h2>
             <p className="text-gray-600 mt-1">
-              {parentId ? 'Create a sub-page' : 'Create a new page in your workspace'}
+              {parentId ? 'Alt sayfa oluştur' : 'Çalışma alanınızda yeni sayfa oluşturun'}
             </p>
           </div>
 
@@ -101,14 +101,14 @@ export default function CreatePageModal({
             {/* Page Title */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Page Title <span className="text-red-500">*</span>
+                Sayfa Başlığı <span className="text-red-500">*</span>
               </label>
               <input
                 type="text"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
-                placeholder="Untitled"
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                placeholder="Başlıksız"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-900 focus:border-transparent outline-none"
                 required
                 autoFocus
               />
@@ -127,7 +127,7 @@ export default function CreatePageModal({
                     onClick={() => setSelectedIcon(emoji)}
                     className={`p-2 text-2xl rounded-lg transition ${
                       selectedIcon === emoji
-                        ? 'bg-blue-100 ring-2 ring-blue-500'
+                        ? 'bg-gray-200 ring-2 ring-gray-900'
                         : 'hover:bg-gray-100'
                     }`}
                   >
@@ -144,14 +144,14 @@ export default function CreatePageModal({
                 onClick={handleClose}
                 className="flex-1 px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-900 rounded-lg transition"
               >
-                Cancel
+                İptal
               </button>
               <button
                 type="submit"
                 disabled={isLoading}
-                className="flex-1 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition disabled:opacity-50"
+                className="flex-1 px-4 py-2 bg-black hover:bg-gray-800 text-white rounded-lg transition disabled:opacity-50"
               >
-                {isLoading ? 'Creating...' : 'Create Page'}
+                {isLoading ? 'Oluşturuluyor...' : 'Sayfa Oluştur'}
               </button>
             </div>
           </form>

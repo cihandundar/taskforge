@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import { apiClient } from '@/lib/api-client';
 import {
   Block,
@@ -13,6 +13,7 @@ export function useBlocks(pageId?: string) {
   const [blocks, setBlocks] = useState<Block[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const isRemoteUpdate = useRef(false);
 
   const fetchBlocks = useCallback(async (targetPageId?: string) => {
     const pid = targetPageId || pageId;
@@ -44,6 +45,12 @@ export function useBlocks(pageId?: string) {
       const response = await apiClient.client.post('/blocks', data);
       const newBlock = response.data.data;
 
+      // Mark as local update to avoid WebSocket feedback loop
+      if (!isRemoteUpdate.current) {
+        // This will be called from local action, emit to WebSocket
+        // (This will be handled by the collaboration hook)
+      }
+
       // Optimistic update - add to list
       setBlocks((prev) => {
         if (data.parentId) {
@@ -64,6 +71,22 @@ export function useBlocks(pageId?: string) {
     }
   }, []);
 
+  // Handle remote block creation (from WebSocket)
+  const handleRemoteBlockCreate = useCallback((block: Block) => {
+    isRemoteUpdate.current = true;
+    setBlocks((prev) => {
+      // Check if block already exists
+      if (prev.some((b) => b.id === block.id)) {
+        return prev;
+      }
+      return [...prev, block];
+    });
+    // Reset flag after a short delay
+    setTimeout(() => {
+      isRemoteUpdate.current = false;
+    }, 100);
+  }, []);
+
   const updateBlock = useCallback(async (
     id: string,
     data: UpdateBlockData
@@ -74,6 +97,12 @@ export function useBlocks(pageId?: string) {
     try {
       const response = await apiClient.client.put(`/blocks/${id}`, data);
       const updatedBlock = response.data.data;
+
+      // Mark as local update to avoid WebSocket feedback loop
+      if (!isRemoteUpdate.current) {
+        // This will be called from local action, emit to WebSocket
+        // (This will be handled by the collaboration hook)
+      }
 
       // Update in list
       setBlocks((prev) =>
@@ -90,12 +119,30 @@ export function useBlocks(pageId?: string) {
     }
   }, []);
 
+  // Handle remote block update (from WebSocket)
+  const handleRemoteBlockUpdate = useCallback((block: Block) => {
+    isRemoteUpdate.current = true;
+    setBlocks((prev) =>
+      prev.map((b) => (b.id === block.id ? block : b))
+    );
+    // Reset flag after a short delay
+    setTimeout(() => {
+      isRemoteUpdate.current = false;
+    }, 100);
+  }, []);
+
   const deleteBlock = useCallback(async (id: string): Promise<void> => {
     setIsLoading(true);
     setError(null);
 
     try {
       await apiClient.client.delete(`/blocks/${id}`);
+
+      // Mark as local update to avoid WebSocket feedback loop
+      if (!isRemoteUpdate.current) {
+        // This will be called from local action, emit to WebSocket
+        // (This will be handled by the collaboration hook)
+      }
 
       // Remove from list
       setBlocks((prev) => prev.filter((b) => b.id !== id));
@@ -106,6 +153,16 @@ export function useBlocks(pageId?: string) {
     } finally {
       setIsLoading(false);
     }
+  }, []);
+
+  // Handle remote block delete (from WebSocket)
+  const handleRemoteBlockDelete = useCallback((blockId: string) => {
+    isRemoteUpdate.current = true;
+    setBlocks((prev) => prev.filter((b) => b.id !== blockId));
+    // Reset flag after a short delay
+    setTimeout(() => {
+      isRemoteUpdate.current = false;
+    }, 100);
   }, []);
 
   const duplicateBlock = useCallback(async (id: string): Promise<Block> => {
@@ -216,5 +273,9 @@ export function useBlocks(pageId?: string) {
     getBlockChildren,
     createParagraph,
     createTypedBlock,
+    // Remote update handlers for WebSocket integration
+    handleRemoteBlockCreate,
+    handleRemoteBlockUpdate,
+    handleRemoteBlockDelete,
   };
 }

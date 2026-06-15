@@ -169,7 +169,7 @@ export default function PageDetailPage({
                   type="text"
                   value={editTitle}
                   onChange={(e) => handleTitleChange(e.target.value)}
-                  className="flex-1 text-2xl font-bold text-gray-900 border-b-2 border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none py-1"
+                  className="flex-1 text-2xl font-bold text-gray-900 border-b-2 border-gray-300 focus:ring-2 focus:ring-gray-900 focus:border-transparent outline-none py-1"
                   autoFocus
                   onKeyDown={(e) => {
                     if (e.key === 'Enter') {
@@ -184,7 +184,7 @@ export default function PageDetailPage({
                 <button
                   onClick={handleSaveTitle}
                   disabled={isSaving || !hasUnsavedChanges}
-                  className="px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 disabled:text-gray-500 text-white rounded-lg transition"
+                  className="px-4 py-2 bg-black hover:bg-gray-800 disabled:bg-gray-300 disabled:text-gray-500 text-white rounded-lg transition"
                 >
                   {isSaving ? 'Saving...' : 'Save'}
                 </button>

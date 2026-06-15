@@ -76,7 +76,7 @@ export default function WorkspaceDetailPage({ params }: { params: { id: string }
               </p>
               <button
                 onClick={() => setIsCreateModalOpen(true)}
-                className="inline-flex items-center space-x-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition"
+                className="inline-flex items-center space-x-2 px-4 py-2 bg-black hover:bg-gray-800 text-white rounded-lg transition"
               >
                 <span className="text-lg">+</span>
                 <span>Create Page</span>

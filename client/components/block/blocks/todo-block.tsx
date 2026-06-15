@@ -63,7 +63,7 @@ export function TodoBlock({
         onClick={handleToggle}
         className={`mt-1 flex-shrink-0 w-5 h-5 rounded border-2 flex items-center justify-center transition-colors ${
           checked
-            ? 'bg-blue-600 border-blue-600'
+            ? 'bg-black border-black'
             : 'border-gray-300 hover:border-gray-400'
         }`}
       >
@@ -84,7 +84,7 @@ export function TodoBlock({
         onChange={handleChange}
         onKeyDown={handleKeyDown}
         onFocus={onFocus}
-        placeholder="To-do..."
+        placeholder="Yapılacak iş..."
         className={`flex-1 outline-none ${
           checked ? 'text-gray-400 line-through' : 'text-gray-900'
         } placeholder-gray-400`}

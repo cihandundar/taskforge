@@ -32,7 +32,7 @@ export class CommentsController {
 
     return {
       success: true,
-      message: 'Comment created successfully',
+      message: 'Yorum başarıyla oluşturuldu',
       data: result,
     };
   }
@@ -100,7 +100,7 @@ export class CommentsController {
 
     return {
       success: true,
-      message: 'Comment updated successfully',
+      message: 'Yorum başarıyla güncellendi',
       data: result,
     };
   }
@@ -131,7 +131,7 @@ export class CommentsController {
 
     return {
       success: true,
-      message: 'Comment resolved successfully',
+      message: 'Yorum başarıyla çözüldü',
       data: result,
     };
   }
@@ -147,7 +147,7 @@ export class CommentsController {
 
     return {
       success: true,
-      message: 'Comment unresolved successfully',
+      message: 'Yorum başarıyla çözülmedi',
       data: result,
     };
   }

@@ -11,7 +11,11 @@
       "Bash(taskkill:*)",
       "Bash(findstr 4000:*)",
       "Bash(sed:*)",
-      "Bash(rm:*)"
+      "Bash(rm:*)",
+      "Bash(xargs grep:*)",
+      "Bash(netstat:*)",
+      "Bash(fuser:*)",
+      "Bash(npx nest:*)"
     ]
   }
 }

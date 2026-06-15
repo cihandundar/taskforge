@@ -50,7 +50,7 @@ export function CalloutBlock({
           onChange={handleChange}
           onKeyDown={handleKeyDown}
           onFocus={onFocus}
-          placeholder="Type something..."
+          placeholder="Bir şeyler yazın..."
           className="flex-1 min-h-[24px] resize-none outline-none bg-transparent text-gray-900 placeholder-gray-500 leading-relaxed"
           rows={1}
           autoFocus={isFocused}

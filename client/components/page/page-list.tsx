@@ -49,7 +49,7 @@ export default function PageList({
     e.stopPropagation();
 
     if (!newPageTitle.trim()) {
-      setCreateError('Page title is required');
+      setCreateError('Sayfa başlığı gerekli');
       return;
     }
 
@@ -72,14 +72,14 @@ export default function PageList({
         onGoToPage(newPage.id);
       }
     } catch (err: any) {
-      setCreateError(err.message || 'Failed to create page');
+      setCreateError(err.message || 'Sayfa oluşturulamadı');
     } finally {
       setIsCreating(false);
     }
   };
 
   const handleDeletePage = async (pageId: string) => {
-    if (!confirm('Are you sure you want to delete this page?')) {
+    if (!confirm('Bu sayfayı silmek istediğinizden emin misiniz?')) {
       return;
     }
 
@@ -159,7 +159,7 @@ export default function PageList({
                     className="w-full flex items-center space-x-2 px-3 py-2 text-sm text-gray-300 hover:bg-gray-700"
                   >
                     <PencilIcon className="w-4 h-4" />
-                    <span>Rename</span>
+                    <span>Yeniden Adlandır</span>
                   </button>
                   <button
                     onClick={(e) => {
@@ -169,7 +169,7 @@ export default function PageList({
                     className="w-full flex items-center space-x-2 px-3 py-2 text-sm text-red-400 hover:bg-gray-700"
                   >
                     <TrashIcon className="w-4 h-4" />
-                    <span>Delete</span>
+                    <span>Sil</span>
                   </button>
                 </div>
               </>
@@ -188,7 +188,7 @@ export default function PageList({
               className="flex items-center space-x-2 px-3 py-1 text-xs text-gray-500 hover:text-gray-300 hover:bg-gray-800 rounded transition"
             >
               <PlusIcon className="w-3 h-3" />
-              <span>Add sub-page</span>
+              <span>Alt sayfa ekle</span>
             </button>
 
             {/* Render Children */}
@@ -229,7 +229,7 @@ export default function PageList({
     <div>
       {/* Header */}
       <div className="flex items-center justify-between px-3 py-2">
-        <h3 className="text-sm font-medium text-gray-400">Pages</h3>
+        <h3 className="text-sm font-medium text-gray-400">Sayfalar</h3>
         <button
           onClick={() => setIsCreateModalOpen(true)}
           className="p-1 rounded hover:bg-gray-800 transition"
@@ -260,12 +260,12 @@ export default function PageList({
           ) : (
             <div className="px-3 py-4 text-center">
               <FolderIcon className="w-8 h-8 text-gray-600 mx-auto mb-2" />
-              <p className="text-sm text-gray-500">No pages yet</p>
+              <p className="text-sm text-gray-500">Henüz sayfa yok</p>
               <button
                 onClick={() => setIsCreateModalOpen(true)}
-                className="mt-2 text-xs text-blue-400 hover:text-blue-300"
+                className="mt-2 text-xs text-gray-900 hover:text-gray-700"
               >
-                Create your first page
+                İlk sayfanızı oluşturun
               </button>
             </div>
           )}
@@ -280,8 +280,8 @@ export default function PageList({
               type="text"
               value={newPageTitle}
               onChange={(e) => setNewPageTitle(e.target.value)}
-              placeholder="Page title..."
-              className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-sm text-white placeholder-gray-500 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+              placeholder="Sayfa başlığı..."
+              className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-sm text-white placeholder-gray-500 focus:ring-2 focus:ring-gray-500 focus:border-transparent outline-none"
               autoFocus
             />
             {createError && (
@@ -291,9 +291,9 @@ export default function PageList({
               <button
                 type="submit"
                 disabled={isCreating}
-                className="flex-1 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-sm rounded-lg transition disabled:opacity-50"
+                className="flex-1 px-3 py-1.5 bg-black hover:bg-gray-800 text-white text-sm rounded-lg transition disabled:opacity-50"
               >
-                {isCreating ? 'Creating...' : 'Create'}
+                {isCreating ? 'Oluşturuluyor...' : 'Oluştur'}
               </button>
               <button
                 type="button"
@@ -304,7 +304,7 @@ export default function PageList({
                 }}
                 className="px-3 py-1.5 bg-gray-700 hover:bg-gray-600 text-white text-sm rounded-lg transition"
               >
-                Cancel
+                İptal
               </button>
             </div>
           </form>

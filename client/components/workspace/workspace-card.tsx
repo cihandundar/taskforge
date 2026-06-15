@@ -42,7 +42,7 @@ export default function WorkspaceCard({
       <div className="p-4 border-b border-gray-100">
         <div className="flex items-start justify-between">
           <div className="flex items-center space-x-3 flex-1 min-w-0">
-            <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
+            <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0">
               <span className="text-xl">{workspace.icon || '🏢'}</span>
             </div>
             <div className="flex-1 min-w-0">
@@ -83,7 +83,7 @@ export default function WorkspaceCard({
                       className="w-full flex items-center space-x-2 px-3 py-2 text-sm text-gray-700 hover:bg-gray-100"
                     >
                       <PencilIcon className="w-4 h-4" />
-                      <span>Edit</span>
+                      <span>Düzenle</span>
                     </button>
                     <button
                       onClick={() => {
@@ -93,7 +93,7 @@ export default function WorkspaceCard({
                       className="w-full flex items-center space-x-2 px-3 py-2 text-sm text-red-600 hover:bg-gray-100"
                     >
                       <TrashIcon className="w-4 h-4" />
-                      <span>Delete</span>
+                      <span>Sil</span>
                     </button>
                   </div>
                 </>
@@ -111,13 +111,13 @@ export default function WorkspaceCard({
             <div className="flex items-center space-x-2">
               <UsersIcon className="w-4 h-4 text-gray-500" />
               <span className="text-sm text-gray-600">
-                {workspace._count?.members || 0} members
+                {workspace._count?.members || 0} üye
               </span>
             </div>
             <div className="flex items-center space-x-2">
               <DocumentTextIcon className="w-4 h-4 text-gray-500" />
               <span className="text-sm text-gray-600">
-                {workspace._count?.pages || 0} pages
+                {workspace._count?.pages || 0} sayfa
               </span>
             </div>
           </div>
@@ -129,7 +129,7 @@ export default function WorkspaceCard({
                 workspace.role === 'OWNER'
                   ? 'bg-purple-100 text-purple-800'
                   : workspace.role === 'ADMIN'
-                  ? 'bg-blue-100 text-blue-800'
+                  ? 'bg-gray-100 text-gray-800'
                   : workspace.role === 'MEMBER'
                   ? 'bg-green-100 text-green-800'
                   : 'bg-gray-100 text-gray-800'
@@ -138,7 +138,7 @@ export default function WorkspaceCard({
               {workspace.role.toLowerCase()}
             </span>
 
-            <span className="text-xs text-gray-500">Joined {new Date(workspace.joinedAt || Date.now()).toLocaleDateString()}</span>
+            <span className="text-xs text-gray-500">Katılınan {new Date(workspace.joinedAt || Date.now()).toLocaleDateString()}</span>
           </div>
         </div>
       </Link>

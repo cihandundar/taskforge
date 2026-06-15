@@ -64,13 +64,13 @@ export default function Header({ workspaceId, workspaceName }: HeaderProps) {
                 {workspaceName ? (
                   <>
                     <span className="text-gray-500 hover:text-gray-700 cursor-pointer">
-                      Workspaces
+                      Çalışma Alanları
                     </span>
                     <span className="text-gray-400">/</span>
                     <span className="text-gray-900 font-medium">{workspaceName}</span>
                   </>
                 ) : (
-                  <span className="text-gray-900 font-medium">Dashboard</span>
+                  <span className="text-gray-900 font-medium">Panel</span>
                 )}
               </nav>
             </div>
@@ -83,7 +83,7 @@ export default function Header({ workspaceId, workspaceName }: HeaderProps) {
               <MagnifyingGlassIcon className="w-4 h-4 text-gray-500" />
               <input
                 type="text"
-                placeholder="Search..."
+                placeholder="Ara..."
                 className="bg-transparent border-none outline-none text-sm w-40"
               />
             </div>
@@ -105,7 +105,7 @@ export default function Header({ workspaceId, workspaceName }: HeaderProps) {
                 onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
                 className="flex items-center space-x-2 p-2 rounded-lg hover:bg-gray-100 transition"
               >
-                <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center">
+                <div className="w-8 h-8 bg-black rounded-full flex items-center justify-center">
                   <span className="text-white text-sm font-medium">
                     {user?.name?.charAt(0) || user?.email?.charAt(0) || 'U'}
                   </span>
@@ -126,13 +126,13 @@ export default function Header({ workspaceId, workspaceName }: HeaderProps) {
                     href="/settings"
                     className="block px-3 py-2 text-sm text-gray-700 hover:bg-gray-100"
                   >
-                    Settings
+                    Ayarlar
                   </Link>
                   <button
                     onClick={handleLogout}
                     className="w-full text-left px-3 py-2 text-sm text-red-600 hover:bg-gray-100"
                   >
-                    Logout
+                    Çıkış Yap
                   </button>
                 </div>
               )}

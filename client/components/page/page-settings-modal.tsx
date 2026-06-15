@@ -62,12 +62,12 @@ export function PageSettingsModal({
         </button>
         <div className="p-6">
           <div className="mb-6">
-            <h2 className="text-2xl font-bold text-gray-900">Page Settings</h2>
-            <p className="text-gray-600 mt-1">Customize your page appearance</p>
+            <h2 className="text-2xl font-bold text-gray-900">Sayfa Ayarları</h2>
+            <p className="text-gray-600 mt-1">Sayfa görünümünüzü özelleştirin</p>
           </div>
           <div className="space-y-6">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-3">Page Icon</label>
+              <label className="block text-sm font-medium text-gray-700 mb-3">Sayfa İkonu</label>
               <div className="grid grid-cols-8 gap-2">
                 {EMOJIS.map((emoji) => (
                   <button
@@ -76,7 +76,7 @@ export function PageSettingsModal({
                     onClick={() => setSelectedIcon(emoji)}
                     className={`p-3 text-2xl rounded-lg transition ${
                       selectedIcon === emoji
-                        ? 'bg-blue-100 ring-2 ring-blue-500'
+                        ? 'bg-gray-200 ring-2 ring-gray-900'
                         : 'hover:bg-gray-100'
                     }`}
                   >
@@ -86,7 +86,7 @@ export function PageSettingsModal({
               </div>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-3">Cover Image</label>
+              <label className="block text-sm font-medium text-gray-700 mb-3">Kapak Resmi</label>
               <div className="grid grid-cols-2 gap-2">
                 {COVERS.map((cover, index) => (
                   <button
@@ -95,18 +95,18 @@ export function PageSettingsModal({
                     onClick={() => setSelectedCover(cover)}
                     className={`h-16 rounded-lg transition relative overflow-hidden ${
                       selectedCover === cover
-                        ? 'ring-2 ring-blue-500 ring-offset-2'
+                        ? 'ring-2 ring-gray-900 ring-offset-2'
                         : 'hover:ring-2 hover:ring-gray-300 hover:ring-offset-2'
                     }`}
                     style={cover ? { background: cover } : {}}
                   >
-                    {!cover && <span className="text-gray-400 text-sm">No Cover</span>}
+                    {!cover && <span className="text-gray-400 text-sm">Kapak Yok</span>}
                   </button>
                 ))}
               </div>
             </div>
             <div className="p-4 bg-gray-50 rounded-lg">
-              <p className="text-xs text-gray-500 mb-2">Preview</p>
+              <p className="text-xs text-gray-500 mb-2">Önizleme</p>
               <div className="flex items-center space-x-3">
                 <span className="text-2xl">{selectedIcon}</span>
                 <div className="flex-1">
@@ -121,14 +121,14 @@ export function PageSettingsModal({
               onClick={onClose}
               className="flex-1 px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-900 rounded-lg transition"
             >
-              Cancel
+              İptal
             </button>
             <button
               type="button"
               onClick={handleSave}
-              className="flex-1 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition"
+              className="flex-1 px-4 py-2 bg-black hover:bg-gray-800 text-white rounded-lg transition"
             >
-              Save Changes
+              Değişiklikleri Kaydet
             </button>
           </div>
         </div>

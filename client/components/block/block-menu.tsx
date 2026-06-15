@@ -11,22 +11,22 @@ interface BlockMenuProps {
 }
 
 const BLOCK_CATEGORIES = {
-  'Basic Blocks': [
-    { type: BlockType.PARAGRAPH, label: 'Text', icon: '📝' },
-    { type: BlockType.HEADING_1, label: 'Heading 1', icon: 'H1' },
-    { type: BlockType.HEADING_2, label: 'Heading 2', icon: 'H2' },
-    { type: BlockType.HEADING_3, label: 'Heading 3', icon: 'H3' },
+  'Temel Bloklar': [
+    { type: BlockType.PARAGRAPH, label: 'Metin', icon: '📝' },
+    { type: BlockType.HEADING_1, label: 'Başlık 1', icon: 'H1' },
+    { type: BlockType.HEADING_2, label: 'Başlık 2', icon: 'H2' },
+    { type: BlockType.HEADING_3, label: 'Başlık 3', icon: 'H3' },
   ],
-  'Lists': [
-    { type: BlockType.BULLETED_LIST, label: 'Bulleted List', icon: '•' },
-    { type: BlockType.NUMBERED_LIST, label: 'Numbered List', icon: '1.' },
-    { type: BlockType.TO_DO, label: 'To-do List', icon: '☑️' },
+  'Listeler': [
+    { type: BlockType.BULLETED_LIST, label: 'Madde İşaretli Liste', icon: '•' },
+    { type: BlockType.NUMBERED_LIST, label: 'Numaralı Liste', icon: '1.' },
+    { type: BlockType.TO_DO, label: 'Yapılacaklar Listesi', icon: '☑️' },
   ],
-  'Advanced': [
-    { type: BlockType.QUOTE, label: 'Quote', icon: '❝' },
-    { type: BlockType.CODE, label: 'Code', icon: '< >' },
-    { type: BlockType.CALLOUT, label: 'Callout', icon: '💡' },
-    { type: BlockType.DIVIDER, label: 'Divider', icon: '—' },
+  'Gelişmiş': [
+    { type: BlockType.QUOTE, label: 'Alıntı', icon: '❝' },
+    { type: BlockType.CODE, label: 'Kod', icon: '< >' },
+    { type: BlockType.CALLOUT, label: 'Çağrı', icon: '💡' },
+    { type: BlockType.DIVIDER, label: 'Ayıraç', icon: '—' },
   ],
 };
 
@@ -124,8 +124,8 @@ export function BlockMenu({
             setFilter(e.target.value);
             setSelectedIndex(0);
           }}
-          placeholder="Filter blocks..."
-          className="w-full px-3 py-2 text-sm outline-none border border-gray-300 rounded-md focus:border-blue-500"
+          placeholder="Blokları filtrele..."
+          className="w-full px-3 py-2 text-sm outline-none border border-gray-300 rounded-md focus:border-gray-900"
           autoFocus
         />
       </div>
@@ -134,7 +134,7 @@ export function BlockMenu({
       <div className="flex-1 overflow-y-auto p-2">
         {filteredOptions.length === 0 ? (
           <div className="text-center py-8 text-gray-500 text-sm">
-            No blocks found
+            Blok bulunamadı
           </div>
         ) : (
           <>
@@ -147,7 +147,7 @@ export function BlockMenu({
                     onClick={() => handleSelect(option.type)}
                     className={`w-full flex items-center gap-3 px-3 py-2 rounded-md text-left text-sm transition-colors ${
                       index === selectedIndex
-                        ? 'bg-blue-100 text-blue-900'
+                        ? 'bg-gray-200 text-gray-900'
                         : 'hover:bg-gray-100'
                     }`}
                   >
@@ -181,7 +181,7 @@ export function BlockMenu({
                           onClick={() => handleSelect(option.type)}
                           className={`w-full flex items-center gap-3 px-3 py-2 rounded-md text-left text-sm transition-colors ${
                             globalIndex === selectedIndex
-                              ? 'bg-blue-100 text-blue-900'
+                              ? 'bg-gray-200 text-gray-900'
                               : 'hover:bg-gray-100'
                           }`}
                         >
@@ -207,8 +207,8 @@ export function BlockMenu({
 
       {/* Keyboard hint */}
       <div className="px-3 py-2 border-t border-gray-200 text-xs text-gray-500 flex items-center justify-between">
-        <span>Use ↑↓ to navigate</span>
-        <span>Enter to select</span>
+        <span>Gezinmek için ↑↓ kullanın</span>
+        <span>Seçmek için Enter</span>
       </div>
     </div>
   );

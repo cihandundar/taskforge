@@ -26,7 +26,7 @@ export class AuthController {
 
     return {
       success: true,
-      message: 'User registered successfully',
+      message: 'Kullanıcı başarıyla kaydedildi',
       data: result,
     };
   }
@@ -39,7 +39,7 @@ export class AuthController {
 
     return {
       success: true,
-      message: 'Login successful',
+      message: 'Giriş başarılı',
       data: result,
     };
   }
@@ -67,7 +67,7 @@ export class AuthController {
 
     return {
       success: true,
-      message: 'Logout successful',
+      message: 'Çıkış başarılı',
     };
   }
 

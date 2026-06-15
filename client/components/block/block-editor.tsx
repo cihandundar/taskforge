@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { useBlocks } from '@/hooks/useBlocks';
+import { useCollaboration } from '@/hooks/useCollaboration';
 import { Block, BlockType } from './types';
 import { BlockItem } from './block-item';
 import { BlockMenu } from './block-menu';
@@ -21,7 +22,25 @@ export function BlockEditor({ pageId }: BlockEditorProps) {
     duplicateBlock,
     createParagraph,
     createTypedBlock,
+    handleRemoteBlockCreate,
+    handleRemoteBlockUpdate,
+    handleRemoteBlockDelete,
   } = useBlocks(pageId);
+
+  // WebSocket collaboration hook
+  const {
+    isConnected,
+    collaborators,
+    getTypingUsersForBlock,
+    hasConflict,
+    emitTypingStart,
+    emitTypingStop,
+  } = useCollaboration({
+    pageId,
+    onRemoteBlockCreate: handleRemoteBlockCreate,
+    onRemoteBlockUpdate: handleRemoteBlockUpdate,
+    onRemoteBlockDelete: handleRemoteBlockDelete,
+  });
 
   const [focusedBlockId, setFocusedBlockId] = useState<string | null>(null);
   const [slashMenuOpen, setSlashMenuOpen] = useState(false);
@@ -114,11 +133,29 @@ export function BlockEditor({ pageId }: BlockEditorProps) {
     async (id: string, data: { content: any }) => {
       try {
         await updateBlock(id, data);
+        // Emit typing stop after successful update
+        emitTypingStop(id);
       } catch (err) {
         console.error('Failed to update block:', err);
       }
     },
-    [updateBlock]
+    [updateBlock, emitTypingStop]
+  );
+
+  // Handle typing start
+  const handleTypingStart = useCallback(
+    (blockId: string) => {
+      emitTypingStart(blockId);
+    },
+    [emitTypingStart]
+  );
+
+  // Handle typing stop
+  const handleTypingStop = useCallback(
+    (blockId: string) => {
+      emitTypingStop(blockId);
+    },
+    [emitTypingStop]
   );
 
   // Handle block delete
@@ -180,7 +217,7 @@ export function BlockEditor({ pageId }: BlockEditorProps) {
   if (blocksLoading && !isInitialized) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="text-gray-500">Loading blocks...</div>
+        <div className="text-gray-500">Bloklar yükleniyor...</div>
       </div>
     );
   }
@@ -219,10 +256,10 @@ export function BlockEditor({ pageId }: BlockEditorProps) {
             </svg>
           </div>
           <h3 className="text-lg font-medium text-gray-900 mb-2">
-            Start writing
+            Yazmaya başla
           </h3>
           <p className="text-gray-600">
-            Click anywhere or press <kbd className="bg-gray-100 px-1 rounded">/</kbd> for commands
+            Herhangi bir yere tıklayın veya komutlar için <kbd className="bg-gray-100 px-1 rounded">/</kbd> tuşuna basın
           </p>
         </div>
       </div>
@@ -231,6 +268,29 @@ export function BlockEditor({ pageId }: BlockEditorProps) {
 
   return (
     <div ref={editorRef} className="block-editor max-w-3xl mx-auto">
+      {/* Connection Status Indicator */}
+      {isConnected && collaborators.length > 0 && (
+        <div className="mb-4 flex items-center gap-2 px-3 py-2 bg-gray-100 rounded-lg">
+          <div className="flex items-center gap-1">
+            <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+            <span className="text-sm text-gray-700">
+              {collaborators.length} {collaborators.length === 1 ? 'işbirlikçi' : 'işbirlikçi'} çevrimiçi
+            </span>
+          </div>
+          <div className="flex -space-x-2">
+            {collaborators.slice(0, 5).map((c) => (
+              <div
+                key={c.socketId}
+                className="w-6 h-6 rounded-full bg-gradient-to-br from-gray-400 to-gray-600 border-2 border-white flex items-center justify-center text-xs text-white font-medium"
+                title={c.userName}
+              >
+                {c.userName?.charAt(0).toUpperCase() || '?'}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Blocks */}
       <div className="space-y-1">
         {blocks.map((block, index) => (
@@ -243,6 +303,10 @@ export function BlockEditor({ pageId }: BlockEditorProps) {
               onTurnInto={handleTurnInto}
               isFocused={focusedBlockId === block.id}
               onFocus={() => handleBlockFocus(block.id)}
+              onTypingStart={handleTypingStart}
+              onTypingStop={handleTypingStop}
+              typingUsers={getTypingUsersForBlock(block.id)}
+              hasConflict={hasConflict(block.id)}
             />
           </div>
         ))}
@@ -278,7 +342,7 @@ export function BlockEditor({ pageId }: BlockEditorProps) {
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
           </svg>
           <span className="opacity-0 group-hover:opacity-100 transition-opacity">
-            Add a block
+            Blok ekle
           </span>
         </button>
       )}

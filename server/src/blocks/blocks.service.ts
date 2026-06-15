@@ -8,10 +8,14 @@ import { PrismaService } from '../common/prisma/prisma.service';
 import { CreateBlockDto } from './dto/create-block.dto';
 import { UpdateBlockDto } from './dto/update-block.dto';
 import { BlockType, Prisma } from '@prisma/client';
+import { WebsocketService } from '../websocket/websocket.service';
 
 @Injectable()
 export class BlocksService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private websocketService: WebsocketService,
+  ) {}
 
   /**
    * Create a new block
@@ -26,7 +30,7 @@ export class BlocksService {
     });
 
     if (!page || page.isDeleted) {
-      throw new NotFoundException('Page not found or deleted');
+      throw new NotFoundException('Sayfa bulunamadı veya silinmiş');
     }
 
     // Check access permissions
@@ -43,7 +47,7 @@ export class BlocksService {
         }))) !== null;
 
     if (!hasAccess) {
-      throw new ForbiddenException('You do not have access to this page');
+      throw new ForbiddenException('Bu sayfaya erişiminiz yok');
     }
 
     // Verify parent block exists and belongs to same page
@@ -53,11 +57,11 @@ export class BlocksService {
       });
 
       if (!parentBlock) {
-        throw new NotFoundException('Parent block not found');
+        throw new NotFoundException('Üst blok bulunamadı');
       }
 
       if (parentBlock.pageId !== pageId) {
-        throw new BadRequestException('Parent block must belong to the same page');
+        throw new BadRequestException('Üst blok aynı sayfaya ait olmalı');
       }
     }
 
@@ -105,11 +109,16 @@ export class BlocksService {
     });
 
     // Parse JSON fields for response
-    return {
+    const result = {
       ...block,
       content: block.content ? JSON.parse(block.content as string) : null,
       props: block.props ? JSON.parse(block.props as string) : null,
     };
+
+    // Emit WebSocket event for real-time collaboration
+    this.websocketService.broadcastBlockEvent(pageId, 'block:created', result);
+
+    return result;
   }
 
   /**
@@ -122,7 +131,7 @@ export class BlocksService {
     });
 
     if (!page || page.isDeleted) {
-      throw new NotFoundException('Page not found or deleted');
+      throw new NotFoundException('Sayfa bulunamadı veya silinmiş');
     }
 
     const hasAccess =
@@ -138,7 +147,7 @@ export class BlocksService {
         }))) !== null;
 
     if (!hasAccess) {
-      throw new ForbiddenException('You do not have access to this page');
+      throw new ForbiddenException('Bu sayfaya erişiminiz yok');
     }
 
     // Get top-level blocks
@@ -201,7 +210,7 @@ export class BlocksService {
     });
 
     if (!block) {
-      throw new NotFoundException('Block not found');
+      throw new NotFoundException('Blok bulunamadı');
     }
 
     // Check access permissions via page
@@ -219,7 +228,7 @@ export class BlocksService {
         }))) !== null;
 
     if (!hasAccess) {
-      throw new ForbiddenException('You do not have access to this block');
+      throw new ForbiddenException('Bu bloğa erişiminiz yok');
     }
 
     // Parse JSON fields
@@ -265,16 +274,26 @@ export class BlocksService {
             avatar: true,
           },
         },
+        page: true,
         children: true,
       },
     });
 
     // Parse JSON fields
-    return {
+    const result = {
       ...updatedBlock,
       content: updatedBlock.content ? (JSON.parse(updatedBlock.content as string) as any) : null,
       props: updatedBlock.props ? (JSON.parse(updatedBlock.props as string) as any) : null,
     };
+
+    // Emit WebSocket event for real-time collaboration
+    this.websocketService.broadcastBlockEvent(
+      updatedBlock.pageId as string,
+      'block:updated',
+      result,
+    );
+
+    return result;
   }
 
   /**
@@ -290,7 +309,7 @@ export class BlocksService {
     });
 
     if (childrenCount > 0) {
-      throw new BadRequestException('Cannot delete block with children. Delete children first.');
+      throw new BadRequestException('Alt blokları olan blok silinemez. Önce alt blokları silin.');
     }
 
     // Delete block
@@ -298,7 +317,13 @@ export class BlocksService {
       where: { id },
     });
 
-    return { message: 'Block deleted successfully' };
+    // Emit WebSocket event for real-time collaboration
+    this.websocketService.broadcastBlockEvent(block.pageId, 'block:deleted', {
+      id,
+      pageId: block.pageId,
+    });
+
+    return { message: 'Blok başarıyla silindi' };
   }
 
   /**
@@ -315,7 +340,7 @@ export class BlocksService {
     });
 
     if (!page || page.isDeleted) {
-      throw new NotFoundException('Page not found or deleted');
+      throw new NotFoundException('Sayfa bulunamadı veya silinmiş');
     }
 
     const hasAccess =
@@ -331,7 +356,7 @@ export class BlocksService {
         }))) !== null;
 
     if (!hasAccess) {
-      throw new ForbiddenException('You do not have access to this page');
+      throw new ForbiddenException('Bu sayfaya erişiminiz yok');
     }
 
     // Update block positions in a transaction
@@ -343,6 +368,12 @@ export class BlocksService {
         }),
       ),
     );
+
+    // Emit WebSocket event for real-time collaboration
+    this.websocketService.broadcastBlockEvent(pageId, 'blocks:reordered', {
+      pageId,
+      blockOrders,
+    });
 
     // Return updated blocks
     return this.findByPage(pageId, userId);
@@ -371,7 +402,7 @@ export class BlocksService {
     });
 
     if (!block) {
-      throw new NotFoundException('Block not found');
+      throw new NotFoundException('Blok bulunamadı');
     }
 
     // Check access permissions via page
@@ -389,7 +420,7 @@ export class BlocksService {
         }))) !== null;
 
     if (!hasAccess) {
-      throw new ForbiddenException('You do not have access to this block');
+      throw new ForbiddenException('Bu bloğa erişiminiz yok');
     }
 
     // Get next position
@@ -435,11 +466,16 @@ export class BlocksService {
     });
 
     // Parse JSON fields
-    return {
+    const result = {
       ...duplicatedBlock,
       content: duplicatedBlock.content ? (JSON.parse(duplicatedBlock.content as string) as any) : null,
       props: duplicatedBlock.props ? (JSON.parse(duplicatedBlock.props as string) as any) : null,
     };
+
+    // Emit WebSocket event for real-time collaboration
+    this.websocketService.broadcastBlockEvent(block.pageId, 'block:created', result);
+
+    return result;
   }
 
   /**

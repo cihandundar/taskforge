@@ -58,7 +58,7 @@ export function ParagraphBlock({
         onChange={handleChange}
         onKeyDown={handleKeyDown}
         onFocus={onFocus}
-        placeholder="Type '/' for commands..."
+        placeholder="Komutlar için '/' yazın..."
         className="w-full min-h-[24px] resize-none outline-none text-gray-900 placeholder-gray-400 leading-relaxed"
         rows={1}
         autoFocus={isFocused}

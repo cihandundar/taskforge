@@ -7,6 +7,8 @@ import { WorkspacesModule } from './workspaces/workspace.module';
 import { PagesModule } from './pages/pages.module';
 import { BlocksModule } from './blocks/blocks.module';
 import { CommentsModule } from './comments/comments.module';
+import { WebsocketModule } from './websocket/websocket.module';
+import { CalendarModule } from './calendar/calendar.module';
 
 @Module({
   imports: [
@@ -19,6 +21,8 @@ import { CommentsModule } from './comments/comments.module';
     PagesModule,
     BlocksModule,
     CommentsModule,
+    WebsocketModule,
+    CalendarModule,
   ],
   controllers: [AppController],
   providers: [AppService],

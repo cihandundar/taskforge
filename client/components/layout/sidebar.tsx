@@ -39,7 +39,7 @@ export default function Sidebar({ workspaceId }: SidebarProps) {
       {/* Logo */}
       <div className="p-4 border-b border-gray-800">
         <Link href="/dashboard" className="flex items-center space-x-2">
-          <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
+          <div className="w-8 h-8 bg-black rounded-lg flex items-center justify-center">
             <span className="text-white font-bold">T</span>
           </div>
           <span className="text-xl font-bold">TaskForge</span>
@@ -51,10 +51,10 @@ export default function Sidebar({ workspaceId }: SidebarProps) {
         <button
           onClick={() => setIsCreatePageModalOpen(true)}
           disabled={!workspaceId}
-          className="w-full flex items-center space-x-2 px-3 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-700 disabled:text-gray-400 rounded-lg transition"
+          className="w-full flex items-center space-x-2 px-3 py-2 bg-black hover:bg-gray-800 disabled:bg-gray-700 disabled:text-gray-400 rounded-lg transition"
         >
           <PlusIcon className="w-5 h-5" />
-          <span>{workspaceId ? 'New Page' : 'Select a workspace'}</span>
+          <span>{workspaceId ? 'Yeni Sayfa' : 'Çalışma alanı seçin'}</span>
         </button>
       </div>
 
@@ -70,7 +70,7 @@ export default function Sidebar({ workspaceId }: SidebarProps) {
           }`}
         >
           <HomeIcon className="w-5 h-5" />
-          <span>Home</span>
+          <span>Ana Sayfa</span>
         </Link>
 
         {/* Workspaces Section */}
@@ -81,7 +81,7 @@ export default function Sidebar({ workspaceId }: SidebarProps) {
           >
             <div className="flex items-center space-x-2">
               <UsersIcon className="w-5 h-5" />
-              <span>Workspaces</span>
+              <span>Çalışma Alanları</span>
             </div>
             {isWorkspacesOpen ? (
               <ChevronDownIcon className="w-4 h-4" />
@@ -92,7 +92,7 @@ export default function Sidebar({ workspaceId }: SidebarProps) {
 
           {isWorkspacesOpen && (
             <div className="ml-6 mt-2 space-y-1">
-              <div className="text-sm text-gray-400 px-3 py-1">Your Workspaces</div>
+              <div className="text-sm text-gray-400 px-3 py-1">Çalışma Alanlarınız</div>
               {workspaces.length > 0 ? (
                 workspaces.map((workspace) => (
                   <Link
@@ -104,7 +104,7 @@ export default function Sidebar({ workspaceId }: SidebarProps) {
                         : 'text-gray-400 hover:bg-gray-800 hover:text-white'
                     }`}
                   >
-                    <div className="w-6 h-6 bg-blue-100 rounded flex items-center justify-center">
+                    <div className="w-6 h-6 bg-gray-100 rounded flex items-center justify-center">
                       <span className="text-sm">{workspace.icon || 'W'}</span>
                     </div>
                     <span className="text-sm truncate">{workspace.name}</span>
@@ -112,7 +112,7 @@ export default function Sidebar({ workspaceId }: SidebarProps) {
                 ))
               ) : (
                 <div className="text-xs text-gray-500 px-3 py-2 italic">
-                  No workspaces yet
+                  Henüz çalışma alanı yok
                 </div>
               )}
               <Link
@@ -120,7 +120,7 @@ export default function Sidebar({ workspaceId }: SidebarProps) {
                 className="flex items-center space-x-2 px-3 py-2 text-gray-400 hover:bg-gray-800 hover:text-white rounded-lg transition text-sm"
               >
                 <PlusIcon className="w-4 h-4" />
-                <span>Create Workspace</span>
+                <span>Çalışma Alanı Oluştur</span>
               </Link>
             </div>
           )}
@@ -145,7 +145,7 @@ export default function Sidebar({ workspaceId }: SidebarProps) {
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-sm font-medium truncate">
-                {user?.name || 'User'}
+                {user?.name || 'Kullanıcı'}
               </p>
               <p className="text-xs text-gray-400 truncate">{user?.email}</p>
             </div>
@@ -157,13 +157,13 @@ export default function Sidebar({ workspaceId }: SidebarProps) {
             className="flex items-center space-x-2 px-3 py-2 text-gray-300 hover:bg-gray-800 hover:text-white rounded-lg transition text-sm"
           >
             <Cog6ToothIcon className="w-4 h-4" />
-            <span>Settings</span>
+            <span>Ayarlar</span>
           </Link>
           <button
             onClick={handleLogout}
             className="w-full flex items-center space-x-2 px-3 py-2 text-gray-300 hover:bg-gray-800 hover:text-white rounded-lg transition text-sm text-left"
           >
-            <span>Logout</span>
+            <span>Çıkış Yap</span>
           </button>
         </div>
       </div>

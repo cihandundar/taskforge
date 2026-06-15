@@ -37,25 +37,25 @@ export default function RegisterForm() {
     const newErrors: FormErrors = {};
 
     if (!formData.name.trim()) {
-      newErrors.name = 'Name is required';
+      newErrors.name = 'İsim gerekli';
     }
 
     if (!formData.email.trim()) {
-      newErrors.email = 'Email is required';
+      newErrors.email = 'E-posta gerekli';
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-      newErrors.email = 'Invalid email format';
+      newErrors.email = 'Geçersiz e-posta formatı';
     }
 
     if (!formData.password) {
-      newErrors.password = 'Password is required';
+      newErrors.password = 'Şifre gerekli';
     } else if (formData.password.length < 8) {
-      newErrors.password = 'Password must be at least 8 characters';
+      newErrors.password = 'Şifre en az 8 karakter olmalı';
     } else if (!/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])/.test(formData.password)) {
-      newErrors.password = 'Password must contain uppercase, lowercase, number and special character';
+      newErrors.password = 'Şifre büyük harf, küçük harf, sayı ve özel karakter içermeli';
     }
 
     if (formData.password !== formData.confirmPassword) {
-      newErrors.confirmPassword = 'Passwords do not match';
+      newErrors.confirmPassword = 'Şifreler eşleşmiyor';
     }
 
     setErrors(newErrors);
@@ -85,7 +85,7 @@ export default function RegisterForm() {
       setServerError(
         error.response?.data?.message ||
         error.message ||
-        'Registration failed. Please try again.'
+        'Kayıt başarısız. Lütfen tekrar deneyin.'
       );
     } finally {
       setIsLoading(false);
@@ -106,8 +106,8 @@ export default function RegisterForm() {
     <div className="w-full max-w-md">
       <div className="bg-white rounded-2xl shadow-lg p-8">
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">Create Account</h1>
-          <p className="text-gray-600 mt-2">Join TaskForge to get started</p>
+          <h1 className="text-3xl font-bold text-gray-900">Hesap Oluştur</h1>
+          <p className="text-gray-600 mt-2">Başlamak için TaskForge'a katılın</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -118,31 +118,31 @@ export default function RegisterForm() {
           )}
 
           <Input
-            label="Full Name"
+            label="Ad Soyad"
             id="name"
             name="name"
             type="text"
             value={formData.name}
             onChange={handleChange}
             error={errors.name}
-            placeholder="John Doe"
+            placeholder="Ahmet Yılmaz"
             required
           />
 
           <Input
-            label="Email Address"
+            label="E-posta Adresi"
             id="email"
             name="email"
             type="email"
             value={formData.email}
             onChange={handleChange}
             error={errors.email}
-            placeholder="john@example.com"
+            placeholder="ornek@email.com"
             required
           />
 
           <Input
-            label="Password"
+            label="Şifre"
             id="password"
             name="password"
             type="password"
@@ -154,7 +154,7 @@ export default function RegisterForm() {
           />
 
           <Input
-            label="Confirm Password"
+            label="Şifre Tekrarı"
             id="confirmPassword"
             name="confirmPassword"
             type="password"
@@ -170,15 +170,15 @@ export default function RegisterForm() {
             className="w-full"
             disabled={isLoading}
           >
-            {isLoading ? 'Creating account...' : 'Create Account'}
+            {isLoading ? 'Hesap oluşturuluyor...' : 'Hesap Oluştur'}
           </Button>
         </form>
 
         <div className="mt-6 text-center">
           <p className="text-sm text-gray-600">
-            Already have an account?{' '}
-            <a href="/auth/login" className="text-blue-600 hover:text-blue-700 font-medium">
-              Sign in
+            Zaten hesabınız var mı?{' '}
+            <a href="/auth/login" className="text-gray-900 hover:text-gray-800 font-medium">
+              Giriş Yap
             </a>
           </p>
         </div>

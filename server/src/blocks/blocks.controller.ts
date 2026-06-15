@@ -33,7 +33,7 @@ export class BlocksController {
 
     return {
       success: true,
-      message: 'Block created successfully',
+      message: 'Blok başarıyla oluşturuldu',
       data: result,
     };
   }
@@ -87,7 +87,7 @@ export class BlocksController {
 
     return {
       success: true,
-      message: 'Block updated successfully',
+      message: 'Blok başarıyla güncellendi',
       data: result,
     };
   }
@@ -125,7 +125,7 @@ export class BlocksController {
 
     return {
       success: true,
-      message: 'Blocks reordered successfully',
+      message: 'Bloklar başarıyla yeniden sıralandı',
       data: result,
     };
   }
@@ -140,7 +140,7 @@ export class BlocksController {
 
     return {
       success: true,
-      message: 'Block duplicated successfully',
+      message: 'Blok başarıyla çoğaltıldı',
       data: result,
     };
   }

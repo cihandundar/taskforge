@@ -14,8 +14,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "TaskForge - Notion-like Workspace",
-  description: "A modern collaborative workspace for teams",
+  title: "TaskForge - Notion Benzeri Çalışma Alanı",
+  description: "Ekipler için modern bir işbirliği çalışma alanı",
 };
 
 export default function RootLayout({
@@ -25,7 +25,7 @@ export default function RootLayout({
 }>) {
   return (
     <html
-      lang="en"
+      lang="tr"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">

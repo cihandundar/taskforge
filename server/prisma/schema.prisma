@@ -26,6 +26,7 @@ model User {
   sessions    Session[]
   comments    Comment[]
   blocks      Block[]
+  calendarNotes CalendarNote[]
 
   createdAt   DateTime    @default(now())
   updatedAt   DateTime    @updatedAt
@@ -139,6 +140,24 @@ model Block {
   @@index([parentId])
   @@index([position])
   @@index([authorId])
+}
+
+// ============= Calendar System =============
+model CalendarNote {
+  id        String   @id @default(cuid())
+  date      String   // Format: YYYY-MM-DD
+  note      String   @db.Text
+  color     String   @default("blue") // blue, green, yellow, red, purple
+
+  // Relations
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([date])
+  @@index([userId])
 }
 
 // ============= Comments System =============

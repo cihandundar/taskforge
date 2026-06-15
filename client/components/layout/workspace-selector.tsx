@@ -43,11 +43,11 @@ export default function WorkspaceSelector({
         className="flex items-center space-x-2 px-3 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition"
       >
         {/* Workspace Icon */}
-        <div className="w-6 h-6 bg-blue-100 rounded flex items-center justify-center">
+        <div className="w-6 h-6 bg-gray-100 rounded flex items-center justify-center">
           {currentWorkspace?.icon ? (
             <span>{currentWorkspace.icon}</span>
           ) : (
-            <span className="text-blue-600 text-sm">W</span>
+            <span className="text-gray-900 text-sm">W</span>
           )}
         </div>
 
@@ -94,11 +94,11 @@ export default function WorkspaceSelector({
                       }}
                     >
                       <div className="flex items-center space-x-2">
-                        <div className="w-6 h-6 bg-blue-100 rounded flex items-center justify-center">
+                        <div className="w-6 h-6 bg-gray-100 rounded flex items-center justify-center">
                           {workspace.icon ? (
                             <span className="text-sm">{workspace.icon}</span>
                           ) : (
-                            <span className="text-blue-600 text-xs">
+                            <span className="text-gray-900 text-xs">
                               {workspace.name.charAt(0)}
                             </span>
                           )}
@@ -136,7 +136,7 @@ export default function WorkspaceSelector({
                   onCreateWorkspace();
                   setIsOpen(false);
                 }}
-                className="w-full mt-2 flex items-center space-x-2 px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition text-sm font-medium"
+                className="w-full mt-2 flex items-center space-x-2 px-3 py-2 bg-black hover:bg-gray-800 text-white rounded-lg transition text-sm font-medium"
               >
                 <PlusIcon className="w-4 h-4" />
                 <span>Create Workspace</span>

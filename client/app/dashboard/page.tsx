@@ -3,7 +3,8 @@
 import { useAuth } from '@/hooks/useAuth';
 import Header from '@/components/layout/header';
 import Sidebar from '@/components/layout/sidebar';
-import WorkspaceList from '@/components/workspace/workspace-list';
+import { LargeCalendar } from '@/components/calendar/large-calendar';
+import { useState } from 'react';
 
 export default function DashboardPage() {
   const { user, isLoading } = useAuth();
@@ -12,37 +13,24 @@ export default function DashboardPage() {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-black mx-auto"></div>
+          <p className="mt-4 text-gray-600">Yükleniyor...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="h-screen bg-gray-50 flex flex-col overflow-hidden">
       {/* Sidebar */}
       <Sidebar />
 
       {/* Header */}
       <Header />
 
-      {/* Main Content */}
-      <main className="pt-16 pl-64">
-        <div className="p-8">
-          {/* Welcome Section */}
-          <div className="mb-8">
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">
-              Welcome back, {user?.name || 'User'}!
-            </h1>
-            <p className="text-gray-600">
-              Here's what's happening with your workspaces today.
-            </p>
-          </div>
-
-          {/* Workspace List */}
-          <WorkspaceList />
-        </div>
+      {/* Main Content - Full Calendar */}
+      <main className="flex-1 pt-16 pl-64 overflow-hidden">
+        <LargeCalendar />
       </main>
     </div>
   );

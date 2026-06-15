@@ -14,6 +14,13 @@ import {
 } from './blocks';
 import { useState, useRef, useCallback } from 'react';
 
+interface Collaborator {
+  userId: string;
+  userName: string;
+  userAvatar?: string;
+  socketId: string;
+}
+
 interface BlockItemProps {
   block: Block;
   onUpdate: (id: string, data: { content: any }) => void;
@@ -22,6 +29,10 @@ interface BlockItemProps {
   onTurnInto?: (id: string, newType: BlockType) => void;
   isFocused?: boolean;
   onFocus?: () => void;
+  onTypingStart?: (blockId: string) => void;
+  onTypingStop?: (blockId: string) => void;
+  typingUsers?: Collaborator[];
+  hasConflict?: boolean;
 }
 
 export function BlockItem({
@@ -32,6 +43,10 @@ export function BlockItem({
   onTurnInto,
   isFocused,
   onFocus,
+  onTypingStart,
+  onTypingStop,
+  typingUsers = [],
+  hasConflict = false,
 }: BlockItemProps) {
   const [showMenu, setShowMenu] = useState(false);
   const [menuPosition, setMenuPosition] = useState({ x: 0, y: 0 });
@@ -56,7 +71,7 @@ export function BlockItem({
   );
 
   const handleDelete = useCallback(() => {
-    if (confirm('Delete this block?')) {
+    if (confirm('Bu bloğu silmek istiyor musunuz?')) {
       onDelete(block.id);
     }
   }, [block.id, onDelete]);
@@ -179,7 +194,7 @@ export function BlockItem({
     <div
       ref={blockRef}
       className={`block-item group relative -mx-4 px-4 py-1 ${
-        isFocused ? 'bg-blue-50' : 'hover:bg-gray-50'
+        isFocused ? 'bg-gray-100' : 'hover:bg-gray-50'
       } transition-colors`}
     >
       {/* Drag Handle & Actions */}
@@ -193,7 +208,7 @@ export function BlockItem({
         {/* Drag Handle */}
         <button
           className="p-1 hover:bg-gray-200 rounded cursor-grab active:cursor-grabbing text-gray-400"
-          title="Drag to move (coming soon)"
+          title="Taşımak için sürükle (yakında)"
         >
           <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
             <path d="M7 2a2 2 0 1 0 .001 4.001A2 2 0 0 0 7 2zm0 6a2 2 0 1 0 .001 4.001A2 2 0 0 0 7 8zm0 6a2 2 0 1 0 .001 4.001A2 2 0 0 0 7 14zm6-8a2 2 0 1 0-.001-4.001A2 2 0 0 0 13 6zm0 2a2 2 0 1 0 .001 4.001A2 2 0 0 0 13 8zm0 6a2 2 0 1 0 .001 4.001A2 2 0 0 0 13 14z" />
@@ -209,7 +224,7 @@ export function BlockItem({
             window.dispatchEvent(event);
           }}
           className="p-1 hover:bg-gray-200 rounded text-gray-400"
-          title="Add block below"
+          title="Aşağıya blok ekle"
         >
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -221,7 +236,7 @@ export function BlockItem({
           <button
             onClick={handleOpenMenu}
             className="p-1 hover:bg-gray-200 rounded text-gray-400"
-            title="More options"
+            title="Diğer seçenekler"
           >
             <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
               <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
@@ -241,7 +256,7 @@ export function BlockItem({
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 011-1h12a1 1 0 011 1v3M4 7h16" />
                 </svg>
-                Delete
+                Sil
               </button>
 
               {/* Duplicate */}
@@ -255,7 +270,7 @@ export function BlockItem({
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
                 </svg>
-                Duplicate
+                Çoğalt
               </button>
 
               {/* Turn Into */}
@@ -263,7 +278,7 @@ export function BlockItem({
                 <>
                   <div className="border-t border-gray-200 my-1" />
                   <div className="px-3 py-1 text-xs text-gray-500 font-medium">
-                    Turn into
+                    Dönüştür
                   </div>
                   {[
                     BlockType.PARAGRAPH,
@@ -291,6 +306,40 @@ export function BlockItem({
           )}
         </div>
       </div>
+
+      {/* Typing Indicators */}
+      {typingUsers && typingUsers.length > 0 && (
+        <div className="absolute right-0 top-0 flex -space-x-2">
+          {typingUsers.slice(0, 3).map((user) => (
+            <div
+              key={user.socketId}
+              className="w-6 h-6 rounded-full bg-gradient-to-br from-gray-400 to-gray-600 border-2 border-white flex items-center justify-center text-xs text-white font-medium"
+              title={`${user.userName} yazıyor...`}
+            >
+              {user.userName?.charAt(0).toUpperCase() || '?'}
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Conflict Indicator */}
+      {hasConflict && (
+        <div className="absolute right-0 top-0">
+          <div
+            className="px-2 py-1 bg-red-100 text-red-700 text-xs rounded-full flex items-center gap-1"
+            title="Çakışma tespit edildi: Başka biri bu bloğu düzenledi"
+          >
+            <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+              <path
+                fillRule="evenodd"
+                d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
+                clipRule="evenodd"
+              />
+            </svg>
+            Çakışma
+          </div>
+        </div>
+      )}
 
       {/* Block Content */}
       <div className="pl-8">{renderBlock()}</div>

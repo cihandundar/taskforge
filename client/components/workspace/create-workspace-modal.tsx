@@ -31,12 +31,12 @@ export default function CreateWorkspaceModal({
     setError('');
 
     if (!name.trim()) {
-      setError('Workspace name is required');
+      setError('Çalışma alanı adı gerekli');
       return;
     }
 
     if (name.length < 3) {
-      setError('Workspace name must be at least 3 characters');
+      setError('Çalışma alanı adı en az 3 karakter olmalı');
       return;
     }
 
@@ -46,7 +46,7 @@ export default function CreateWorkspaceModal({
       await onCreate({ name, icon: selectedIcon, description });
       handleClose();
     } catch (err: any) {
-      setError(err.message || 'Failed to create workspace');
+      setError(err.message || 'Çalışma alanı oluşturulamadı');
     } finally {
       setIsLoading(false);
     }
@@ -83,9 +83,9 @@ export default function CreateWorkspaceModal({
         {/* Content */}
         <div className="p-6">
           <div className="mb-6">
-            <h2 className="text-2xl font-bold text-gray-900">Create Workspace</h2>
+            <h2 className="text-2xl font-bold text-gray-900">Çalışma Alanı Oluştur</h2>
             <p className="text-gray-600 mt-1">
-              Create a new workspace to organize your projects
+              Projelerinizi düzenlemek için yeni bir çalışma alanı oluşturun
             </p>
           </div>
 
@@ -100,14 +100,14 @@ export default function CreateWorkspaceModal({
             {/* Workspace Name */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Workspace Name <span className="text-red-500">*</span>
+                Çalışma Alanı Adı <span className="text-red-500">*</span>
               </label>
               <input
                 type="text"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                placeholder="My Awesome Workspace"
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                placeholder="Harika Çalışma Alanım"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-900 focus:border-transparent outline-none"
                 required
               />
             </div>
@@ -125,7 +125,7 @@ export default function CreateWorkspaceModal({
                     onClick={() => setSelectedIcon(emoji)}
                     className={`p-2 text-2xl rounded-lg transition ${
                       selectedIcon === emoji
-                        ? 'bg-blue-100 ring-2 ring-blue-500'
+                        ? 'bg-gray-200 ring-2 ring-gray-900'
                         : 'hover:bg-gray-100'
                     }`}
                   >
@@ -138,14 +138,14 @@ export default function CreateWorkspaceModal({
             {/* Description */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Description <span className="text-gray-400">(optional)</span>
+                Açıklama <span className="text-gray-400">(isteğe bağlı)</span>
               </label>
               <textarea
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                placeholder="What is this workspace for?"
+                placeholder="Bu çalışma alanı ne için?"
                 rows={3}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none resize-none"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-900 focus:border-transparent outline-none resize-none"
               />
             </div>
 
@@ -157,14 +157,14 @@ export default function CreateWorkspaceModal({
                 variant="secondary"
                 className="flex-1"
               >
-                Cancel
+                İptal
               </Button>
               <Button
                 type="submit"
                 disabled={isLoading}
                 className="flex-1"
               >
-                {isLoading ? 'Creating...' : 'Create Workspace'}
+                {isLoading ? 'Oluşturuluyor...' : 'Çalışma Alanı Oluştur'}
               </Button>
             </div>
           </form>

@@ -35,13 +35,13 @@ export default function LoginForm({ redirectPath = '/dashboard' }: LoginFormProp
     const newErrors: FormErrors = {};
 
     if (!formData.email.trim()) {
-      newErrors.email = 'Email is required';
+      newErrors.email = 'E-posta gerekli';
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-      newErrors.email = 'Invalid email format';
+      newErrors.email = 'Geçersiz e-posta formatı';
     }
 
     if (!formData.password) {
-      newErrors.password = 'Password is required';
+      newErrors.password = 'Şifre gerekli';
     }
 
     setErrors(newErrors);
@@ -70,7 +70,7 @@ export default function LoginForm({ redirectPath = '/dashboard' }: LoginFormProp
       setServerError(
         error.response?.data?.message ||
         error.message ||
-        'Login failed. Please check your credentials.'
+        'Giriş başarısız. Bilgilerinizi kontrol edin.'
       );
     } finally {
       setIsLoading(false);
@@ -91,8 +91,8 @@ export default function LoginForm({ redirectPath = '/dashboard' }: LoginFormProp
     <div className="w-full max-w-md">
       <div className="bg-white rounded-2xl shadow-lg p-8">
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">Welcome Back</h1>
-          <p className="text-gray-600 mt-2">Sign in to your account</p>
+          <h1 className="text-3xl font-bold text-gray-900">Tekrar Hoş Geldiniz</h1>
+          <p className="text-gray-600 mt-2">Hesabınıza giriş yapın</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -103,19 +103,19 @@ export default function LoginForm({ redirectPath = '/dashboard' }: LoginFormProp
           )}
 
           <Input
-            label="Email Address"
+            label="E-posta Adresi"
             id="email"
             name="email"
             type="email"
             value={formData.email}
             onChange={handleChange}
             error={errors.email}
-            placeholder="john@example.com"
+            placeholder="ornek@email.com"
             required
           />
 
           <Input
-            label="Password"
+            label="Şifre"
             id="password"
             name="password"
             type="password"
@@ -130,12 +130,12 @@ export default function LoginForm({ redirectPath = '/dashboard' }: LoginFormProp
             <label className="flex items-center">
               <input
                 type="checkbox"
-                className="rounded border-gray-300 text-blue-600 focus:ring-blue-600"
+                className="rounded border-gray-300 text-gray-900 focus:ring-gray-900"
               />
-              <span className="ml-2 text-sm text-gray-600">Remember me</span>
+              <span className="ml-2 text-sm text-gray-600">Beni hatırla</span>
             </label>
-            <a href="#" className="text-sm text-blue-600 hover:text-blue-700">
-              Forgot password?
+            <a href="#" className="text-sm text-gray-900 hover:text-gray-800">
+              Şifremi unuttum?
             </a>
           </div>
 
@@ -144,15 +144,15 @@ export default function LoginForm({ redirectPath = '/dashboard' }: LoginFormProp
             className="w-full"
             disabled={isLoading}
           >
-            {isLoading ? 'Signing in...' : 'Sign In'}
+            {isLoading ? 'Giriş yapılıyor...' : 'Giriş Yap'}
           </Button>
         </form>
 
         <div className="mt-6 text-center">
           <p className="text-sm text-gray-600">
-            Don't have an account?{' '}
-            <a href="/auth/register" className="text-blue-600 hover:text-blue-700 font-medium">
-              Sign up
+            Hesabınız yok mu?{' '}
+            <a href="/auth/register" className="text-gray-900 hover:text-gray-800 font-medium">
+              Kayıt Ol
             </a>
           </p>
         </div>
