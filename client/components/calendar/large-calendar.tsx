@@ -2,19 +2,30 @@
 
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
+import { apiClient } from '@/lib/api-client';
+import { useSites } from '@/hooks/useSites';
 
 interface CalendarNote {
   id: string;
   date: string; // YYYY-MM-DD format
   note: string;
   color: 'blue' | 'green' | 'yellow' | 'red' | 'purple';
+  status: 'todo' | 'in_progress' | 'completed' | 'cancelled';
   userId: string;
   userName: string;
   createdAt: string;
+  siteId?: string | null;
+  site?: {
+    id: string;
+    name: string;
+    color: string;
+    url: string;
+  };
 }
 
 interface LargeCalendarProps {
   onDateSelect?: (date: Date) => void;
+  selectedSiteId?: string;
 }
 
 const colorClasses = {
@@ -25,8 +36,31 @@ const colorClasses = {
   purple: 'bg-purple-100 text-purple-800 border-purple-200',
 };
 
-export function LargeCalendar({ onDateSelect }: LargeCalendarProps) {
+const colorDots: Record<string, string> = {
+  blue: 'bg-blue-500',
+  green: 'bg-green-500',
+  yellow: 'bg-yellow-500',
+  red: 'bg-red-500',
+  purple: 'bg-purple-500',
+};
+
+const statusConfig = {
+  todo: { label: 'Başlamadı', color: 'bg-gray-400', textColor: 'text-gray-600' },
+  in_progress: { label: 'Devam Ediyor', color: 'bg-blue-500', textColor: 'text-blue-600' },
+  completed: { label: 'Tamamlandı', color: 'bg-green-500', textColor: 'text-green-600' },
+  cancelled: { label: 'İptal', color: 'bg-red-500', textColor: 'text-red-600' },
+};
+
+const statusIcons: Record<string, string> = {
+  todo: '○',
+  in_progress: '◑',
+  completed: '●',
+  cancelled: '⊘',
+};
+
+export function LargeCalendar({ onDateSelect, selectedSiteId: propSelectedSiteId }: LargeCalendarProps) {
   const { user } = useAuth();
+  const { sites } = useSites();
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [viewMonth, setViewMonth] = useState(new Date());
@@ -35,8 +69,14 @@ export function LargeCalendar({ onDateSelect }: LargeCalendarProps) {
   const [currentNoteDate, setCurrentNoteDate] = useState<string>('');
   const [currentNoteText, setCurrentNoteText] = useState('');
   const [currentNoteColor, setCurrentNoteColor] = useState<'blue' | 'green' | 'yellow' | 'red' | 'purple'>('blue');
+  const [currentNoteSiteId, setCurrentNoteSiteId] = useState<string>('');
+  const [currentNoteStatus, setCurrentNoteStatus] = useState<'todo' | 'in_progress' | 'completed' | 'cancelled'>('todo');
   const [viewMode, setViewMode] = useState<'personal' | 'all'>('personal');
+  const [selectedSiteId, setSelectedSiteId] = useState<string>(propSelectedSiteId || '');
+  const [statusFilter, setStatusFilter] = useState<'all' | 'todo' | 'in_progress' | 'completed' | 'cancelled'>('all');
   const [isLoading, setIsLoading] = useState(false);
+  const [editingNoteId, setEditingNoteId] = useState<string | null>(null);
+  const [expandedDateCells, setExpandedDateCells] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     const today = new Date();
@@ -46,28 +86,26 @@ export function LargeCalendar({ onDateSelect }: LargeCalendarProps) {
     fetchNotes();
   }, [viewMode]);
 
+  useEffect(() => {
+    if (propSelectedSiteId !== undefined) {
+      setSelectedSiteId(propSelectedSiteId);
+    }
+  }, [propSelectedSiteId]);
+
   const fetchNotes = async () => {
     setIsLoading(true);
     try {
-      const token = localStorage.getItem('token');
-      const url = viewMode === 'all'
-        ? `${process.env.NEXT_PUBLIC_API_URL}/calendar/all`
-        : `${process.env.NEXT_PUBLIC_API_URL}/calendar`;
+      const endpoint = viewMode === 'all' ? '/calendar/all' : '/calendar';
+      const response = await apiClient.client.get(endpoint);
 
-      const response = await fetch(url, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-      });
-
-      if (response.ok) {
-        const data = await response.json();
+      if (response.data) {
         // Transform data to match CalendarNote interface
-        const transformedData = data.map((note: any) => ({
+        const transformedData = response.data.map((note: any) => ({
           id: note.id,
           date: note.date,
           note: note.note,
           color: note.color,
+          status: note.status || 'todo',
           userId: note.userId,
           userName: note.user?.name || 'Bilinmeyen',
           createdAt: note.createdAt,
@@ -83,39 +121,31 @@ export function LargeCalendar({ onDateSelect }: LargeCalendarProps) {
 
   const saveNote = async () => {
     if (!currentNoteText.trim()) {
-      await deleteNote();
+      setIsNoteModalOpen(false);
       return;
     }
 
     try {
-      const token = localStorage.getItem('token');
-      const existingNote = notes.find(n => n.date === currentNoteDate && n.userId === user?.id);
+      const noteData = {
+        date: currentNoteDate,
+        note: currentNoteText,
+        color: currentNoteColor,
+        status: currentNoteStatus,
+        siteId: currentNoteSiteId || null,
+      };
 
-      let url = `${process.env.NEXT_PUBLIC_API_URL}/calendar`;
-      let method = 'POST';
-
-      if (existingNote) {
-        url = `${process.env.NEXT_PUBLIC_API_URL}/calendar/${existingNote.id}`;
-        method = 'PUT';
+      if (editingNoteId) {
+        // Update existing note
+        await apiClient.client.put(`/calendar/${editingNoteId}`, noteData);
+      } else {
+        // Create new note
+        await apiClient.client.post('/calendar', noteData);
       }
 
-      const response = await fetch(url, {
-        method,
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          date: currentNoteDate,
-          note: currentNoteText,
-          color: currentNoteColor,
-        }),
-      });
-
-      if (response.ok) {
-        await fetchNotes();
-        setIsNoteModalOpen(false);
-      }
+      await fetchNotes();
+      setIsNoteModalOpen(false);
+      setEditingNoteId(null);
+      setCurrentNoteSiteId('');
     } catch (error) {
       console.error('Not kaydedilirken hata:', error);
     }
@@ -123,22 +153,12 @@ export function LargeCalendar({ onDateSelect }: LargeCalendarProps) {
 
   const deleteNote = async () => {
     try {
-      const token = localStorage.getItem('token');
-      const existingNote = notes.find(n => n.date === currentNoteDate && n.userId === user?.id);
-
-      if (existingNote) {
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/calendar/${existingNote.id}`, {
-          method: 'DELETE',
-          headers: {
-            'Authorization': `Bearer ${token}`,
-          },
-        });
-
-        if (response.ok) {
-          await fetchNotes();
-        }
+      if (editingNoteId) {
+        await apiClient.client.delete(`/calendar/${editingNoteId}`);
+        await fetchNotes();
       }
       setIsNoteModalOpen(false);
+      setEditingNoteId(null);
     } catch (error) {
       console.error('Not silinirken hata:', error);
     }
@@ -176,11 +196,13 @@ export function LargeCalendar({ onDateSelect }: LargeCalendarProps) {
     onDateSelect?.(newDate);
   };
 
-  const openNoteModal = (dateString: string) => {
+  const openNoteModal = (dateString: string, noteToEdit?: CalendarNote) => {
     setCurrentNoteDate(dateString);
-    const existingNote = notes.find(n => n.date === dateString && n.userId === user?.id);
-    setCurrentNoteText(existingNote?.note || '');
-    setCurrentNoteColor(existingNote?.color || 'blue');
+    setEditingNoteId(noteToEdit?.id || null);
+    setCurrentNoteText(noteToEdit?.note || '');
+    setCurrentNoteColor(noteToEdit?.color || 'blue');
+    setCurrentNoteSiteId(noteToEdit?.siteId || '');
+    setCurrentNoteStatus(noteToEdit?.status || 'todo');
     setIsNoteModalOpen(true);
   };
 
@@ -195,7 +217,38 @@ export function LargeCalendar({ onDateSelect }: LargeCalendarProps) {
 
   const getNotesForDate = (day: number) => {
     const dateStr = `${viewMonth.getFullYear()}-${String(viewMonth.getMonth() + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-    return notes.filter(n => n.date === dateStr);
+    return notes.filter(n =>
+      n.date === dateStr &&
+      (!selectedSiteId || n.siteId === selectedSiteId) &&
+      (statusFilter === 'all' || n.status === statusFilter)
+    );
+  };
+
+  const toggleDateCellExpansion = (dateStr: string) => {
+    setExpandedDateCells(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(dateStr)) {
+        newSet.delete(dateStr);
+      } else {
+        newSet.add(dateStr);
+      }
+      return newSet;
+    });
+  };
+
+  const updateNoteStatus = async (noteId: string, newStatus: 'todo' | 'in_progress' | 'completed' | 'cancelled') => {
+    try {
+      const note = notes.find(n => n.id === noteId);
+      if (note) {
+        await apiClient.client.put(`/calendar/${noteId}`, {
+          ...note,
+          status: newStatus
+        });
+        await fetchNotes();
+      }
+    } catch (error) {
+      console.error('Durum güncellenirken hata:', error);
+    }
   };
 
   const { daysInMonth, startingDayOfWeek } = getDaysInMonth(viewMonth);
@@ -239,6 +292,77 @@ export function LargeCalendar({ onDateSelect }: LargeCalendarProps) {
           </div>
 
           <div className="flex items-center gap-3">
+            {/* Status Filter */}
+            <div className="flex items-center bg-gray-100 rounded-xl p-1">
+              <button
+                onClick={() => setStatusFilter('all')}
+                className={`
+                  px-3 py-2 rounded-lg text-sm font-medium transition
+                  ${statusFilter === 'all' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-600'}
+                `}
+              >
+                Tümü
+              </button>
+              <button
+                onClick={() => setStatusFilter('todo')}
+                className={`
+                  px-3 py-2 rounded-lg text-sm font-medium transition flex items-center gap-1.5
+                  ${statusFilter === 'todo' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-600'}
+                `}
+              >
+                <span className="text-gray-400">○</span>
+                Başlamadı
+              </button>
+              <button
+                onClick={() => setStatusFilter('in_progress')}
+                className={`
+                  px-3 py-2 rounded-lg text-sm font-medium transition flex items-center gap-1.5
+                  ${statusFilter === 'in_progress' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-600'}
+                `}
+              >
+                <span className="text-blue-500">◑</span>
+                Devam Eden
+              </button>
+              <button
+                onClick={() => setStatusFilter('completed')}
+                className={`
+                  px-3 py-2 rounded-lg text-sm font-medium transition flex items-center gap-1.5
+                  ${statusFilter === 'completed' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-600'}
+                `}
+              >
+                <span className="text-green-500">●</span>
+                Tamamlanan
+              </button>
+            </div>
+
+            {/* Site Filter */}
+            {sites.length > 0 && (
+              <div className="flex items-center bg-gray-100 rounded-xl p-1">
+                <button
+                  onClick={() => setSelectedSiteId('')}
+                  className={`
+                    px-3 py-2 rounded-lg text-sm font-medium transition
+                    ${selectedSiteId === '' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-600'}
+                  `}
+                >
+                  Tüm Siteler
+                </button>
+                {sites.map((site) => (
+                  <button
+                    key={site.id}
+                    onClick={() => setSelectedSiteId(site.id)}
+                    className={`
+                      px-3 py-2 rounded-lg text-sm font-medium transition flex items-center gap-1.5
+                      ${selectedSiteId === site.id ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-600'}
+                    `}
+                  >
+                    <span className={`w-2 h-2 rounded-full ${colorDots[site.color] || 'bg-gray-500'}`} />
+                    {site.name}
+                  </button>
+                ))}
+              </div>
+            )}
+
             {/* View Mode Toggle */}
             <div className="flex items-center bg-gray-100 rounded-xl p-1">
               <button
@@ -300,28 +424,46 @@ export function LargeCalendar({ onDateSelect }: LargeCalendarProps) {
             const dayNotes = getNotesForDate(day);
             const dateStr = `${viewMonth.getFullYear()}-${String(viewMonth.getMonth() + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
             const myNote = dayNotes.find(n => n.userId === user?.id);
+            const isExpanded = expandedDateCells.has(dateStr);
 
             return (
               <div
                 key={day}
-                onClick={() => selectDate(day)}
-                onDoubleClick={() => openNoteModal(dateStr)}
                 className={`
                   border-r border-b border-gray-200 p-3 min-h-[120px] cursor-pointer
                   transition hover:bg-gray-50 relative
                   ${dayIsToday ? 'bg-blue-50' : 'bg-white'}
                 `}
               >
-                <div className={`text-lg font-medium mb-1 ${dayIsToday ? 'text-blue-600' : 'text-gray-900'}`}>
-                  {day}
-                  {dayIsToday && (
-                    <span className="ml-2 text-xs bg-blue-600 text-white px-2 py-0.5 rounded-full">Bugün</span>
+                <div
+                  className="flex items-center justify-between mb-2"
+                  onClick={() => selectDate(day)}
+                  onDoubleClick={() => openNoteModal(dateStr)}
+                >
+                  <div className={`text-lg font-medium ${dayIsToday ? 'text-blue-600' : 'text-gray-900'}`}>
+                    {day}
+                    {dayIsToday && (
+                      <span className="ml-2 text-xs bg-blue-600 text-white px-2 py-0.5 rounded-full">Bugün</span>
+                    )}
+                  </div>
+                  {dayNotes.length > 1 && (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        toggleDateCellExpansion(dateStr);
+                      }}
+                      className="text-xs text-gray-500 hover:text-gray-700 px-2 py-1 rounded hover:bg-gray-100 transition"
+                    >
+                      {isExpanded ? '▼' : `+${dayNotes.length - 1}`}
+                    </button>
                   )}
                 </div>
 
-                <div className="space-y-1">
-                  {dayNotes.map((note) => {
+                <div className="space-y-1" onClick={() => selectDate(day)}>
+                  {dayNotes.slice(0, isExpanded ? undefined : 1).map((note) => {
                     const isMyNote = note.userId === user?.id;
+                    const statusInfo = statusConfig[note.status];
+
                     return (
                       <div
                         key={note.id}
@@ -331,40 +473,90 @@ export function LargeCalendar({ onDateSelect }: LargeCalendarProps) {
                           ${!isMyNote ? 'opacity-80' : ''}
                         `}
                       >
+                        <div className="flex items-center justify-between mb-1">
+                          <div className="flex items-center gap-1.5">
+                            {/* Status Icon */}
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                const statusCycle: Record<string, string> = {
+                                  'todo': 'in_progress',
+                                  'in_progress': 'completed',
+                                  'completed': 'todo',
+                                  'cancelled': 'todo'
+                                };
+                                updateNoteStatus(note.id, statusCycle[note.status] as any);
+                              }}
+                              className={`text-xs ${statusInfo.textColor} hover:opacity-70 transition`}
+                              title={statusInfo.label}
+                            >
+                              {statusIcons[note.status]}
+                            </button>
+
+                            {/* Site Badge */}
+                            {note.site && (
+                              <span className="text-[10px] font-medium opacity-75 truncate">
+                                {note.site.name}
+                              </span>
+                            )}
+                          </div>
+
+                          {isMyNote && (
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                openNoteModal(dateStr, note);
+                              }}
+                              className="w-4 h-4 flex items-center justify-center rounded bg-white/50 hover:bg-white opacity-0 group-hover:opacity-100 transition"
+                              title="Notu düzenle"
+                            >
+                              <svg className="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                              </svg>
+                            </button>
+                          )}
+                        </div>
+
                         <p className="line-clamp-2 pr-4">{note.note}</p>
+
                         {!isMyNote && (
                           <span className="absolute bottom-1 right-1 text-[10px] font-medium opacity-60">
                             {note.userName?.split(' ')[0] || '?'}
                           </span>
                         )}
+
                         {isMyNote && (
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              openNoteModal(dateStr);
-                            }}
-                            className="absolute top-1 right-1 w-5 h-5 flex items-center justify-center rounded bg-white/50 hover:bg-white opacity-0 group-hover:opacity-100 transition"
-                          >
-                            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-                            </svg>
-                          </button>
+                          <>
+                            <button
+                              onClick={async (e) => {
+                                e.stopPropagation();
+                                await apiClient.client.delete(`/calendar/${note.id}`);
+                                await fetchNotes();
+                              }}
+                              className="absolute bottom-1 right-1 w-4 h-4 flex items-center justify-center rounded bg-red-500/50 hover:bg-red-500 text-white opacity-0 group-hover:opacity-100 transition"
+                              title="Notu sil"
+                            >
+                              <svg className="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                              </svg>
+                            </button>
+                          </>
                         )}
                       </div>
                     );
                   })}
                 </div>
 
+                {/* Add Note Button */}
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
                     openNoteModal(dateStr);
                   }}
-                  className="absolute bottom-2 right-2 w-8 h-8 flex items-center justify-center rounded-full bg-gray-100 hover:bg-gray-200 text-gray-600 transition opacity-0 hover:opacity-100"
+                  className="absolute bottom-2 right-2 w-6 h-6 flex items-center justify-center rounded-full bg-gray-200 hover:bg-gray-300 opacity-0 group-hover:opacity-100 transition text-gray-600 text-xs"
+                  title="Yeni not ekle"
                 >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                  </svg>
+                  +
                 </button>
               </div>
             );
@@ -421,12 +613,14 @@ export function LargeCalendar({ onDateSelect }: LargeCalendarProps) {
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl shadow-xl max-w-md w-full p-6">
             <h3 className="text-xl font-bold text-gray-900 mb-4">
-              {new Date(currentNoteDate).toLocaleDateString('tr-TR', {
-                weekday: 'long',
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric'
-              })}
+              {editingNoteId ? 'Notu Düzenle' : 'Yeni Not Ekle'} - {
+                new Date(currentNoteDate).toLocaleDateString('tr-TR', {
+                  weekday: 'long',
+                  year: 'numeric',
+                  month: 'long',
+                  day: 'numeric'
+                })
+              }
             </h3>
 
             <textarea
@@ -436,6 +630,23 @@ export function LargeCalendar({ onDateSelect }: LargeCalendarProps) {
               className="w-full h-32 p-3 border border-gray-300 rounded-xl resize-none focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent"
               autoFocus
             />
+
+            {/* Site Selection */}
+            <div className="mt-4">
+              <label className="block text-sm font-medium text-gray-700 mb-2">İlgili Site (Opsiyonel)</label>
+              <select
+                value={currentNoteSiteId}
+                onChange={(e) => setCurrentNoteSiteId(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black"
+              >
+                <option value="">Site seçilmedi</option>
+                {sites.map((site) => (
+                  <option key={site.id} value={site.id}>
+                    {site.name}
+                  </option>
+                ))}
+              </select>
+            </div>
 
             <div className="mt-4">
               <label className="block text-sm font-medium text-gray-700 mb-2">Renk</label>
@@ -449,6 +660,29 @@ export function LargeCalendar({ onDateSelect }: LargeCalendarProps) {
                       ${currentNoteColor === color ? 'ring-2 ring-offset-2 ring-gray-900' : ''}
                     `}
                   />
+                ))}
+              </div>
+            </div>
+
+            {/* Status Selection */}
+            <div className="mt-4">
+              <label className="block text-sm font-medium text-gray-700 mb-2">Durum</label>
+              <div className="flex flex-wrap gap-2">
+                {Object.entries(statusConfig).map(([status, config]) => (
+                  <button
+                    key={status}
+                    onClick={() => setCurrentNoteStatus(status as any)}
+                    className={`
+                      px-3 py-2 rounded-lg text-sm font-medium border transition
+                      ${currentNoteStatus === status
+                        ? `${config.color.replace('bg-', 'bg-')} text-white border-transparent`
+                        : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
+                      }
+                    `}
+                  >
+                    <span className="mr-1">{statusIcons[status]}</span>
+                    {config.label}
+                  </button>
                 ))}
               </div>
             </div>
@@ -467,7 +701,10 @@ export function LargeCalendar({ onDateSelect }: LargeCalendarProps) {
                 Sil
               </button>
               <button
-                onClick={() => setIsNoteModalOpen(false)}
+                onClick={() => {
+                  setIsNoteModalOpen(false);
+                  setEditingNoteId(null);
+                }}
                 className="px-4 py-3 bg-gray-100 text-gray-700 rounded-xl font-medium hover:bg-gray-200 transition"
               >
                 İptal

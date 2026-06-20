@@ -1,6 +1,7 @@
 import { Controller, Get, Post, Put, Delete, Body, Param, UseGuards, Request } from '@nestjs/common';
 import { CalendarService } from './calendar.service';
-import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { CreateCalendarDto, UpdateCalendarDto } from './dto';
 
 @Controller('calendar')
 @UseGuards(JwtAuthGuard)
@@ -8,8 +9,8 @@ export class CalendarController {
   constructor(private readonly calendarService: CalendarService) {}
 
   @Post()
-  create(@Request() req, @Body() createNoteDto: any) {
-    return this.calendarService.createNote(req.user.id, req.user.name, createNoteDto);
+  create(@Request() req, @Body() createNoteDto: CreateCalendarDto) {
+    return this.calendarService.createNote(req.user.id, createNoteDto);
   }
 
   @Get()
@@ -23,7 +24,7 @@ export class CalendarController {
   }
 
   @Put(':id')
-  update(@Param('id') id: string, @Request() req, @Body() updateNoteDto: any) {
+  update(@Param('id') id: string, @Request() req, @Body() updateNoteDto: UpdateCalendarDto) {
     return this.calendarService.updateNote(id, req.user.id, updateNoteDto);
   }
 

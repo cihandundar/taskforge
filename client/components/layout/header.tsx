@@ -5,12 +5,12 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import {
   Bars3Icon,
-  BellIcon,
   MagnifyingGlassIcon,
   Cog6ToothIcon,
 } from '@heroicons/react/24/outline';
 import { useState } from 'react';
 import Sidebar from './sidebar';
+import { MentionNotifications } from '@/components/mention';
 
 interface HeaderProps {
   workspaceId?: string;
@@ -41,7 +41,7 @@ export default function Header({ workspaceId, workspaceName }: HeaderProps) {
       {/* Mobile Sidebar */}
       {isSidebarOpen && (
         <div className="fixed inset-y-0 left-0 z-50 lg:hidden">
-          <Sidebar workspaceId={workspaceId} />
+          <Sidebar />
         </div>
       )}
 
@@ -88,11 +88,8 @@ export default function Header({ workspaceId, workspaceName }: HeaderProps) {
               />
             </div>
 
-            {/* Notifications */}
-            <button className="relative p-2 rounded-lg hover:bg-gray-100 transition">
-              <BellIcon className="w-5 h-5 text-gray-600" />
-              <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
-            </button>
+            {/* Notifications - Mentions */}
+            <MentionNotifications />
 
             {/* Settings */}
             <button className="p-2 rounded-lg hover:bg-gray-100 transition">

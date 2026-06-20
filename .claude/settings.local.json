@@ -15,7 +15,14 @@
       "Bash(xargs grep:*)",
       "Bash(netstat:*)",
       "Bash(fuser:*)",
-      "Bash(npx nest:*)"
+      "Bash(npx nest:*)",
+      "Bash(npx ts-node:*)",
+      "Bash(npm test:*)",
+      "Bash(cat:*)",
+      "Bash(cmd.exe:*)",
+      "Bash(mkdir:*)",
+      "Bash(grep:*)",
+      "Bash(git:*)"
     ]
   }
 }

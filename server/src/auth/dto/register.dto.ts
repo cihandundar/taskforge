@@ -6,16 +6,16 @@ export class RegisterDto {
   email: string;
 
   @IsString()
-  @MinLength(8)
-  @MaxLength(128)
+  @MinLength(8, { message: 'Şifre en az 8 karakter olmalı' })
+  @MaxLength(128, { message: 'Şifre çok uzun' })
   @Matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/, {
-    message: 'Password must contain uppercase, lowercase, number and special character'
+    message: 'Şifre en az 1 büyük harf, 1 küçük harf, 1 rakam ve 1 özel karakter içermelidir (@$!%*?&)'
   })
   password: string;
 
   @IsString()
-  @MinLength(2)
-  @MaxLength(50)
+  @MinLength(2, { message: 'İsim en az 2 karakter olmalı' })
+  @MaxLength(50, { message: 'İsim çok uzun' })
   @IsOptional()
   name?: string;
 }

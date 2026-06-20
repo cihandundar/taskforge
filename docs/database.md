@@ -131,7 +131,43 @@ Block {
 }
 ```
 
-#### 5. Comments
+#### 5. Site Management System
+```prisma
+Site {
+  id: String (cuid)
+  name: String
+  url: String
+  color: String (default: "blue")
+  isActive: Boolean
+  userId: String (FK → User)
+
+  Relations:
+  - user (User)
+  - notes (CalendarNote)
+
+  Indexes: [userId]
+}
+```
+
+#### 6. Calendar Notes
+```prisma
+CalendarNote {
+  id: String (cuid)
+  date: String (format: YYYY-MM-DD)
+  note: String (text)
+  color: String (default: "blue")
+  userId: String (FK → User)
+  siteId: String? (FK → Site)
+
+  Relations:
+  - user (User)
+  - site (Site, optional)
+
+  Indexes: [date, userId, siteId]
+}
+```
+
+#### 7. Comments
 ```prisma
 Comment {
   id: String (cuid)
@@ -169,6 +205,14 @@ User (1) ----< (N) Session
   |-- (1) ----< (N) Page (author)
   |
   |-- (1) ----< (N) Comment (author)
+  |
+  |-- (1) ----< (N) Site
+  |                |
+  |                |-- (1) ----< (N) CalendarNote
+  |
+  |-- (1) ----< (N) CalendarNote (user notes)
+  |
+  |-- (1) ----< (N) Block (author)
 ```
 
 ### Key Relationships
@@ -189,6 +233,11 @@ User (1) ----< (N) Session
 4. **Soft Deletes**
    - Pages use soft delete (isDeleted flag)
    - Comments use resolved flag instead of delete
+
+5. **Site & Calendar Integration**
+   - Sites are user-specific entities for organizing calendar notes
+   - Calendar notes can be associated with sites or standalone
+   - Color coding for both sites and notes (blue, green, yellow, red, purple)
 
 ## 📝 Common Queries
 

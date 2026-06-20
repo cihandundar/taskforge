@@ -27,6 +27,9 @@ model User {
   comments    Comment[]
   blocks      Block[]
   calendarNotes CalendarNote[]
+  sites       Site[]
+  receivedMentions Mention[] @relation("MentionedUser")
+  uploadedFiles  File[]
 
   createdAt   DateTime    @default(now())
   updatedAt   DateTime    @updatedAt
@@ -142,22 +145,46 @@ model Block {
   @@index([authorId])
 }
 
+// ============= Site Management System =============
+model Site {
+  id          String   @id @default(cuid())
+  name        String
+  url         String
+  color       String   @default("blue") // blue, green, yellow, red, purple
+  isActive    Boolean  @default(true)
+
+  // Relations
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  notes       CalendarNote[]
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([userId])
+}
+
 // ============= Calendar System =============
 model CalendarNote {
   id        String   @id @default(cuid())
   date      String   // Format: YYYY-MM-DD
   note      String   @db.Text
   color     String   @default("blue") // blue, green, yellow, red, purple
+  status    String   @default("todo") // todo, in_progress, completed, cancelled
 
   // Relations
   userId    String
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  siteId    String?
+  site      Site?    @relation(fields: [siteId], references: [id], onDelete: SetNull)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   @@index([date])
   @@index([userId])
+  @@index([siteId])
+  @@index([status])
 }
 
 // ============= Comments System =============
@@ -171,12 +198,51 @@ model Comment {
   page      Page     @relation(fields: [pageId], references: [id], onDelete: Cascade)
   authorId  String
   author    User     @relation(fields: [authorId], references: [id])
+  mentions  Mention[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   @@index([pageId])
   @@index([resolved])
+}
+
+// ============= Mention System =============
+model Mention {
+  id         String   @id @default(cuid())
+  read       Boolean  @default(false)
+
+  // Relations
+  commentId  String
+  comment    Comment  @relation(fields: [commentId], references: [id], onDelete: Cascade)
+  mentionedUserId String
+  mentionedUser   User  @relation("MentionedUser", fields: [mentionedUserId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@unique([commentId, mentionedUserId])
+  @@index([mentionedUserId])
+  @@index([read])
+}
+
+// ============= File System =============
+model File {
+  id           String   @id @default(cuid())
+  originalName String
+  filename     String   @unique
+  mimetype     String
+  size         Int      // File size in bytes
+  path         String   @db.Text
+
+  // Relations
+  uploadedById String
+  uploadedBy   User     @relation(fields: [uploadedById], references: [id], onDelete: Cascade)
+
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([uploadedById])
+  @@index([filename])
 }
 
 // ============= Enums =============

@@ -86,8 +86,18 @@ class ApiClient {
       async (error) => {
         const originalRequest = error.config;
 
+        // Skip refresh for refresh endpoint itself to avoid loop
+        if (originalRequest?.url?.includes('/auth/refresh')) {
+          this.clearTokens();
+          this.clearCurrentUser();
+          if (typeof window !== 'undefined') {
+            window.location.href = '/auth/login';
+          }
+          return Promise.reject(error);
+        }
+
         // If error is 401 and we haven't tried refreshing yet
-        if (error.response?.status === 401 && !originalRequest._retry) {
+        if (error.response?.status === 401 && !originalRequest?._retry) {
           originalRequest._retry = true;
 
           try {
@@ -111,6 +121,7 @@ class ApiClient {
           } catch (refreshError) {
             // Refresh failed, clear tokens and redirect to login
             this.clearTokens();
+            this.clearCurrentUser();
             if (typeof window !== 'undefined') {
               window.location.href = '/auth/login';
             }
@@ -171,6 +182,10 @@ class ApiClient {
 
   async login(data: LoginData): Promise<ApiResponse<LoginResponse>> {
     const response = await this.client.post<ApiResponse<LoginResponse>>('/auth/login', data);
+
+    // Debug
+    console.log('Login Response:', response.data);
+
     const { user, tokens } = response.data.data;
 
     // Store tokens
@@ -181,9 +196,15 @@ class ApiClient {
   }
 
   async logout(): Promise<void> {
-    const refreshToken = this.getRefreshToken();
-    await this.client.post('/auth/logout', { refreshToken });
-    this.clearTokens();
+    try {
+      const refreshToken = this.getRefreshToken();
+      await this.client.post('/auth/logout', { refreshToken });
+    } catch (error) {
+      console.error('Logout API error:', error);
+    } finally {
+      this.clearTokens();
+      this.clearCurrentUser();
+    }
   }
 
   async getProfile(): Promise<ApiResponse<User>> {
@@ -229,6 +250,122 @@ class ApiClient {
     if (typeof window === 'undefined') return;
     Cookies.remove(COOKIE_NAMES.USER, { path: '/' });
     localStorage.removeItem('user');
+  }
+
+  // File upload methods
+  async uploadFile(file: File): Promise<ApiResponse<any>> {
+    const formData = new FormData();
+    formData.append('file', file);
+
+    const response = await this.client.post<ApiResponse<any>>('/files/upload', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+
+    return response.data;
+  }
+
+  async uploadFiles(files: File[]): Promise<ApiResponse<{ files: any[] }>> {
+    const formData = new FormData();
+    files.forEach((file) => {
+      formData.append('files', file);
+    });
+
+    const response = await this.client.post<ApiResponse<{ files: any[] }>>('/files/upload/multiple', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+
+    return response.data;
+  }
+
+  async getFile(id: string): Promise<ApiResponse<any>> {
+    const response = await this.client.get<ApiResponse<any>>(`/files/${id}`);
+    return response.data;
+  }
+
+  async downloadFile(id: string): Promise<ApiResponse<{ filename: string; url: string; mimetype: string }>> {
+    const response = await this.client.get<ApiResponse<{ filename: string; url: string; mimetype: string }>>(`/files/${id}/download`);
+    return response.data;
+  }
+
+  async deleteFile(id: string): Promise<ApiResponse<{ message: string }>> {
+    const response = await this.client.delete<ApiResponse<{ message: string }>>(`/files/${id}`);
+    return response.data;
+  }
+
+  // Comments API methods
+  async getComments(pageId: string): Promise<ApiResponse<any>> {
+    const response = await this.client.get<ApiResponse<any>>('/comments', {
+      params: { pageId }
+    });
+    return response.data;
+  }
+
+  async getComment(id: string): Promise<ApiResponse<any>> {
+    const response = await this.client.get<ApiResponse<any>>(`/comments/${id}`);
+    return response.data;
+  }
+
+  async createComment(data: { content: string; pageId: string }): Promise<ApiResponse<any>> {
+    const response = await this.client.post<ApiResponse<any>>('/comments', data);
+    return response.data;
+  }
+
+  async updateComment(id: string, data: { content?: string; resolved?: boolean }): Promise<ApiResponse<any>> {
+    const response = await this.client.patch<ApiResponse<any>>(`/comments/${id}`, data);
+    return response.data;
+  }
+
+  async deleteComment(id: string): Promise<ApiResponse<any>> {
+    const response = await this.client.delete<ApiResponse<any>>(`/comments/${id}`);
+    return response.data;
+  }
+
+  async resolveComment(id: string): Promise<ApiResponse<any>> {
+    const response = await this.client.patch<ApiResponse<any>>(`/comments/${id}/resolve`);
+    return response.data;
+  }
+
+  async unresolveComment(id: string): Promise<ApiResponse<any>> {
+    const response = await this.client.patch<ApiResponse<any>>(`/comments/${id}/unresolve`);
+    return response.data;
+  }
+
+  async getUnresolvedComments(userId?: string): Promise<ApiResponse<any>> {
+    const params = userId ? { userId } : {};
+    const response = await this.client.get<ApiResponse<any>>('/comments/unresolved', { params });
+    return response.data;
+  }
+
+  // Mentions API methods
+  async getMentions(): Promise<ApiResponse<any>> {
+    const response = await this.client.get<ApiResponse<any>>('/mentions');
+    return response.data;
+  }
+
+  async getUnreadMentions(): Promise<ApiResponse<any>> {
+    const response = await this.client.get<ApiResponse<any>>('/mentions/unread');
+    return response.data;
+  }
+
+  async searchUsers(query: string): Promise<ApiResponse<any>> {
+    const response = await this.client.get<ApiResponse<any>>('/mentions/search', {
+      params: { q: query }
+    });
+    return response.data;
+  }
+
+  async markMentionAsRead(id: string): Promise<ApiResponse<any>> {
+    const response = await this.client.patch<ApiResponse<any>>(`/mentions/${id}/read`);
+    return response.data;
+  }
+
+  async markAllMentionsAsRead(): Promise<ApiResponse<any>> {
+    const response = await this.client.patch<ApiResponse<any>>('/mentions/read-all');
+    return response.data;
   }
 }
 

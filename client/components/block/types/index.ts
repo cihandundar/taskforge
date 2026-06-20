@@ -64,9 +64,18 @@ export interface QuoteContent {
   author?: string;
 }
 
+export interface CodeFileAttachment {
+  id: string;
+  name: string;
+  size: number;
+  type: string;
+  url: string;
+}
+
 export interface CodeContent {
   code: string;
   language?: string;
+  files?: CodeFileAttachment[];
 }
 
 export interface TodoContent {

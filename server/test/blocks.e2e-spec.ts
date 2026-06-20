@@ -453,7 +453,7 @@ describe('Blocks API (e2e)', () => {
         .expect(200)
         .expect((res) => {
           expect(res.body.success).toBe(true);
-          expect(res.body.message).toBe('Block deleted successfully');
+          expect(res.body.message).toBe('Blok başarıyla silindi');
         });
     });
 

@@ -14,6 +14,7 @@ export default function WorkspaceDetailPage({ params }: { params: { id: string }
   const { workspaces } = useWorkspaces();
   const { createPage } = usePages(params.id);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
 
   const currentWorkspace = workspaces.find((w) => w.id === params.id);
 
@@ -42,7 +43,10 @@ export default function WorkspaceDetailPage({ params }: { params: { id: string }
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Sidebar */}
-      <Sidebar workspaceId={params.id} />
+      <Sidebar
+        isOpen={isSidebarOpen}
+        onToggle={() => setIsSidebarOpen(!isSidebarOpen)}
+      />
 
       {/* Header */}
       <Header
@@ -50,8 +54,22 @@ export default function WorkspaceDetailPage({ params }: { params: { id: string }
         workspaceName={currentWorkspace?.name}
       />
 
+      {/* Sidebar Toggle Button (Desktop) */}
+      <button
+        onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+        className="fixed left-64 top-20 z-50 hidden lg:flex items-center justify-center w-8 h-8 bg-white border border-gray-200 rounded-lg shadow-sm hover:bg-gray-50 transition"
+        style={{ left: isSidebarOpen ? '260px' : '0' }}
+      >
+        <svg className={`w-4 h-4 text-gray-600 transition-transform ${isSidebarOpen ? '' : 'rotate-180'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+        </svg>
+      </button>
+
       {/* Main Content */}
-      <main className="pt-16 pl-64 flex">
+      <main
+        className="pt-16 flex transition-all duration-300"
+        style={{ paddingLeft: isSidebarOpen ? '256px' : '0' }}
+      >
         {/* Left Panel - Page List */}
         <div className="w-64 bg-white border-r border-gray-200 p-4">
           <PageList

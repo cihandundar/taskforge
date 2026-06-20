@@ -236,7 +236,7 @@ describe('AuthController (e2e)', () => {
         .expect(200)
         .expect((res) => {
           expect(res.body.success).toBe(true);
-          expect(res.body.message).toContain('Logout');
+          expect(res.body.message).toContain('Çıkış');
         });
     });
 

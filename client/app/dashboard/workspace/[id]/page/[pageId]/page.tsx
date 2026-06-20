@@ -9,6 +9,9 @@ import { BlockEditor } from '@/components/block';
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { PageSettingsModal } from '@/components/page/page-settings-modal';
+import { CommentSidebar } from '@/components/comment';
+import { useAuth } from '@/hooks/useAuth';
+import { ChatBubbleLeftEllipsisIcon } from '@heroicons/react/24/outline';
 
 export default function PageDetailPage({
   params,
@@ -18,12 +21,15 @@ export default function PageDetailPage({
   const router = useRouter();
   const { workspaces } = useWorkspaces();
   const { pages, updatePage, deletePage } = usePages(params.id);
+  const { user } = useAuth();
   const [currentPage, setCurrentPage] = useState<any>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [editTitle, setEditTitle] = useState('');
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [isCommentSidebarOpen, setIsCommentSidebarOpen] = useState(false);
   const titleInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -55,6 +61,7 @@ export default function PageDetailPage({
   }, [isEditing, editTitle, currentPage]);
 
   const currentWorkspace = workspaces.find((w) => w.id === params.id);
+  const isPageAuthor = currentPage?.authorId === user?.id;
 
   const handleStartEdit = () => {
     setIsEditing(true);
@@ -138,7 +145,10 @@ export default function PageDetailPage({
   return (
     <div className="min-h-screen bg-white">
       {/* Sidebar */}
-      <Sidebar workspaceId={params.id} />
+      <Sidebar
+        isOpen={isSidebarOpen}
+        onToggle={() => setIsSidebarOpen(!isSidebarOpen)}
+      />
 
       {/* Header */}
       <Header
@@ -146,8 +156,22 @@ export default function PageDetailPage({
         workspaceName={currentWorkspace?.name}
       />
 
+      {/* Sidebar Toggle Button (Desktop) */}
+      <button
+        onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+        className="fixed left-64 top-20 z-50 hidden lg:flex items-center justify-center w-8 h-8 bg-white border border-gray-200 rounded-lg shadow-sm hover:bg-gray-50 transition"
+        style={{ left: isSidebarOpen ? '260px' : '0' }}
+      >
+        <svg className={`w-4 h-4 text-gray-600 transition-transform ${isSidebarOpen ? '' : 'rotate-180'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+        </svg>
+      </button>
+
       {/* Main Content */}
-      <main className="pt-16 pl-64 flex h-screen">
+      <main
+        className="pt-16 flex h-screen transition-all duration-300"
+        style={{ paddingLeft: isSidebarOpen ? '256px' : '0' }}
+      >
         {/* Left Panel - Page List */}
         <div className="w-64 bg-white border-r border-gray-200 flex flex-col">
           <div className="flex-1 overflow-y-auto">
@@ -260,8 +284,19 @@ export default function PageDetailPage({
 
           {/* Page Content Area */}
           <div className="flex-1 overflow-y-auto">
-            <BlockEditor pageId={params.page} />
+            <div className="max-w-4xl mx-auto">
+              <BlockEditor pageId={params.page} />
+            </div>
           </div>
+
+          {/* Comment Toggle Button */}
+          <button
+            onClick={() => setIsCommentSidebarOpen(!isCommentSidebarOpen)}
+            className="fixed right-4 bottom-4 z-50 p-3 bg-blue-600 text-white rounded-full shadow-lg hover:bg-blue-700 transition-colors"
+            title="Yorumlar"
+          >
+            <ChatBubbleLeftEllipsisIcon className="w-6 h-6" />
+          </button>
         </div>
       </main>
 
@@ -272,6 +307,15 @@ export default function PageDetailPage({
         onUpdate={handleSettingsSave}
         currentIcon={currentPage.icon}
         currentCover={currentPage.cover}
+      />
+
+      {/* Comment Sidebar */}
+      <CommentSidebar
+        pageId={params.page}
+        isOpen={isCommentSidebarOpen}
+        onClose={() => setIsCommentSidebarOpen(false)}
+        isPageAuthor={isPageAuthor}
+        workspaceId={params.id}
       />
     </div>
   );

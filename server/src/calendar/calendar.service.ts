@@ -1,19 +1,22 @@
 import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
 import { PrismaService } from '../common/prisma/prisma.service';
+import { CreateCalendarDto, UpdateCalendarDto } from './dto';
 
 @Injectable()
 export class CalendarService {
   constructor(private prisma: PrismaService) {}
 
-  async createNote(userId: string, userName: string, createNoteDto: any) {
-    const { date, note, color } = createNoteDto;
+  async createNote(userId: string, createNoteDto: CreateCalendarDto) {
+    const { date, note, color, siteId, status } = createNoteDto;
 
     return this.prisma.calendarNote.create({
       data: {
         date,
         note,
         color: color || 'blue',
+        status: status || 'todo',
         userId,
+        siteId,
       },
       include: {
         user: {
@@ -21,6 +24,14 @@ export class CalendarService {
             id: true,
             name: true,
             email: true,
+          },
+        },
+        site: {
+          select: {
+            id: true,
+            name: true,
+            color: true,
+            url: true,
           },
         },
       },
@@ -30,13 +41,21 @@ export class CalendarService {
   async getMyNotes(userId: string) {
     return this.prisma.calendarNote.findMany({
       where: { userId },
-      orderBy: { date: 'ASC' },
+      orderBy: { date: 'asc' },
       include: {
         user: {
           select: {
             id: true,
             name: true,
             email: true,
+          },
+        },
+        site: {
+          select: {
+            id: true,
+            name: true,
+            color: true,
+            url: true,
           },
         },
       },
@@ -45,7 +64,7 @@ export class CalendarService {
 
   async getAllNotes() {
     return this.prisma.calendarNote.findMany({
-      orderBy: { date: 'ASC' },
+      orderBy: { date: 'asc' },
       include: {
         user: {
           select: {
@@ -54,11 +73,19 @@ export class CalendarService {
             email: true,
           },
         },
+        site: {
+          select: {
+            id: true,
+            name: true,
+            color: true,
+            url: true,
+          },
+        },
       },
     });
   }
 
-  async updateNote(noteId: string, userId: string, updateNoteDto: any) {
+  async updateNote(noteId: string, userId: string, updateNoteDto: UpdateCalendarDto) {
     const note = await this.prisma.calendarNote.findUnique({
       where: { id: noteId },
     });
@@ -80,6 +107,14 @@ export class CalendarService {
             id: true,
             name: true,
             email: true,
+          },
+        },
+        site: {
+          select: {
+            id: true,
+            name: true,
+            color: true,
+            url: true,
           },
         },
       },

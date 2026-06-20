@@ -228,6 +228,29 @@ export class WebsocketService {
   }
 
   /**
+   * Broadcast comment event to room
+   */
+  broadcastCommentEvent(
+    pageId: string,
+    event: 'comment:created' | 'comment:updated' | 'comment:deleted' | 'comment:resolved' | 'comment:unresolved',
+    data: any,
+    excludeSocketId?: string,
+  ): void {
+    const server = this.getServer();
+    if (!server) {
+      return;
+    }
+
+    const roomName = this.getPageRoomName(pageId);
+
+    if (excludeSocketId) {
+      server.to(roomName).except(excludeSocketId).emit(event, data);
+    } else {
+      server.to(roomName).emit(event, data);
+    }
+  }
+
+  /**
    * Emit conflict detected event
    */
   emitConflict(socketId: string, blockId: string, message: string): void {
@@ -240,5 +263,39 @@ export class WebsocketService {
       blockId,
       message,
     });
+  }
+
+  /**
+   * Broadcast event to specific user (all their sockets)
+   */
+  broadcastToUser(userId: string, event: string, data: any): void {
+    const server = this.getServer();
+    if (!server) {
+      return;
+    }
+
+    // Find all sockets for this user
+    for (const [pageId, users] of Object.entries(this.roomUsers)) {
+      for (const [socketId, user] of Object.entries(users)) {
+        if (user.userId === userId) {
+          server.to(socketId).emit(event, data);
+        }
+      }
+    }
+  }
+
+  /**
+   * Get user's active socket IDs
+   */
+  getUserSocketIds(userId: string): string[] {
+    const socketIds: string[] = [];
+    for (const [pageId, users] of Object.entries(this.roomUsers)) {
+      for (const [socketId, user] of Object.entries(users)) {
+        if (user.userId === userId) {
+          socketIds.push(socketId);
+        }
+      }
+    }
+    return socketIds;
   }
 }

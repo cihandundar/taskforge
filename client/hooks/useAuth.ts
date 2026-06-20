@@ -23,14 +23,26 @@ export function AuthProvider({ children }: { children: any }) {
     const initAuth = async () => {
       try {
         const storedUser = apiClient.getCurrentUser();
-        if (storedUser && apiClient.isAuthenticated()) {
-          const profile = await apiClient.getProfile();
-          setUser(profile.data);
-          apiClient.setCurrentUser(profile.data);
+        const token = apiClient.getToken();
+        if (storedUser && token) {
+          try {
+            const profile = await apiClient.getProfile();
+            setUser(profile.data);
+            apiClient.setCurrentUser(profile.data);
+          } catch (profileError) {
+            console.error('Profile fetch failed, clearing auth:', profileError);
+            apiClient.clearTokens();
+            apiClient.clearCurrentUser();
+            setUser(null);
+          }
+        } else {
+          setUser(null);
         }
       } catch (error) {
+        console.error('Auth init error:', error);
         apiClient.clearTokens();
         apiClient.clearCurrentUser();
+        setUser(null);
       } finally {
         setIsLoading(false);
       }
@@ -52,9 +64,17 @@ export function AuthProvider({ children }: { children: any }) {
   };
 
   const logout = async () => {
-    await apiClient.logout();
-    setUser(null);
-    apiClient.clearCurrentUser();
+    try {
+      await apiClient.logout();
+    } catch (error) {
+      console.error('Logout error:', error);
+    } finally {
+      setUser(null);
+      apiClient.clearCurrentUser();
+      if (typeof window !== 'undefined') {
+        window.location.href = '/';
+      }
+    }
   };
 
   const refreshUser = async () => {

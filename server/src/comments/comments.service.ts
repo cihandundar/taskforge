@@ -3,14 +3,23 @@ import {
   NotFoundException,
   ForbiddenException,
   BadRequestException,
+  Inject,
+  forwardRef,
 } from '@nestjs/common';
 import { PrismaService } from '../common/prisma/prisma.service';
 import { CreateCommentDto } from './dto/create-comment.dto';
 import { UpdateCommentDto } from './dto/update-comment.dto';
+import { WebsocketService } from '../websocket/websocket.service';
+import { MentionsService } from '../mentions/mentions.service';
 
 @Injectable()
 export class CommentsService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private websocketService: WebsocketService,
+    @Inject(forwardRef(() => MentionsService))
+    private mentionsService: MentionsService,
+  ) {}
 
   /**
    * Create a new comment
@@ -66,6 +75,23 @@ export class CommentsService {
           },
         },
       },
+    });
+
+    // Broadcast to WebSocket
+    this.websocketService.broadcastCommentEvent(pageId, 'comment:created', {
+      id: comment.id,
+      content: comment.content,
+      resolved: comment.resolved,
+      authorId: comment.authorId,
+      author: comment.author,
+      createdAt: comment.createdAt,
+      updatedAt: comment.updatedAt,
+    });
+
+    // Process mentions (will be handled by mentions service via webhook/event)
+    // This is async, don't wait for it
+    this.processMentions(comment.id, content).catch((error) => {
+      console.error('Failed to process mentions:', error);
     });
 
     return comment;
@@ -192,7 +218,18 @@ export class CommentsService {
             avatar: true,
           },
         },
+        page: {
+          select: { id: true },
+        },
       },
+    });
+
+    // Broadcast to WebSocket
+    this.websocketService.broadcastCommentEvent(updatedComment.pageId, 'comment:updated', {
+      id: updatedComment.id,
+      content: updatedComment.content,
+      resolved: updatedComment.resolved,
+      updatedAt: updatedComment.updatedAt,
     });
 
     return updatedComment;
@@ -211,8 +248,18 @@ export class CommentsService {
     }
 
     // Delete comment
-    await this.prisma.comment.delete({
+    const deletedComment = await this.prisma.comment.delete({
       where: { id },
+      include: {
+        page: {
+          select: { id: true },
+        },
+      },
+    });
+
+    // Broadcast to WebSocket
+    this.websocketService.broadcastCommentEvent(deletedComment.pageId, 'comment:deleted', {
+      id: deletedComment.id,
     });
 
     return { message: 'Comment deleted successfully' };
@@ -247,7 +294,17 @@ export class CommentsService {
             avatar: true,
           },
         },
+        page: {
+          select: { id: true },
+        },
       },
+    });
+
+    // Broadcast to WebSocket
+    this.websocketService.broadcastCommentEvent(resolvedComment.pageId, 'comment:resolved', {
+      id: resolvedComment.id,
+      resolved: true,
+      updatedAt: resolvedComment.updatedAt,
     });
 
     return resolvedComment;
@@ -282,10 +339,60 @@ export class CommentsService {
             avatar: true,
           },
         },
+        page: {
+          select: { id: true },
+        },
       },
     });
 
+    // Broadcast to WebSocket
+    this.websocketService.broadcastCommentEvent(unresolvedComment.pageId, 'comment:unresolved', {
+      id: unresolvedComment.id,
+      resolved: false,
+      updatedAt: unresolvedComment.updatedAt,
+    });
+
     return unresolvedComment;
+  }
+
+  /**
+   * Process mentions in comment content
+   * Private method to extract and create mentions
+   */
+  private async processMentions(commentId: string, content: string) {
+    // Parse @mentions from content
+    // Pattern: @userId or @email
+    const mentionPattern = /@([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}|[a-zA-Z0-9_-]{20,})/g;
+    const matches = content.match(mentionPattern);
+
+    if (!matches) return;
+
+    const mentionedIds: string[] = [];
+
+    for (const match of matches) {
+      const identifier = match.substring(1); // Remove @
+
+      // Check if it's a user ID (cuid format)
+      if (identifier.length >= 20 && /^[a-zA-Z0-9_-]+$/.test(identifier)) {
+        mentionedIds.push(identifier);
+      }
+      // If it's an email, lookup user
+      else if (identifier.includes('@')) {
+        const user = await this.prisma.user.findUnique({
+          where: { email: identifier },
+          select: { id: true },
+        });
+        if (user) {
+          mentionedIds.push(user.id);
+        }
+      }
+    }
+
+    // Remove duplicates and create mentions
+    const uniqueIds = [...new Set(mentionedIds)];
+    if (uniqueIds.length > 0) {
+      await this.mentionsService.createMentions(commentId, uniqueIds);
+    }
   }
 
   /**

@@ -1,7 +1,14 @@
 'use client';
 
-import { Block, CodeContent } from '../types';
+import { Block, CodeContent, CodeFileAttachment } from '../types';
 import { useState } from 'react';
+import { FileUpload, FileAttachment } from '../../file-upload';
+import { apiClient } from '../../../lib/api-client';
+import {
+  PaperClipIcon,
+  XMarkIcon,
+  DocumentIcon
+} from '@heroicons/react/24/outline';
 
 interface CodeBlockProps {
   block: Block;
@@ -43,8 +50,10 @@ export function CodeBlock({
   const content = block.content as CodeContent | null;
   const code = content?.code || '';
   const language = content?.language || 'javascript';
+  const files = content?.files || [];
 
   const [showLanguageMenu, setShowLanguageMenu] = useState(false);
+  const [showFileUpload, setShowFileUpload] = useState(false);
 
   const handleCodeChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     onUpdate(block.id, {
@@ -63,6 +72,52 @@ export function CodeBlock({
       },
     });
     setShowLanguageMenu(false);
+  };
+
+  const handleFilesSelected = async (newFiles: FileAttachment[]) => {
+    // Upload files to server
+    const updatedFiles: CodeFileAttachment[] = [];
+
+    for (const fileAttachment of newFiles) {
+      try {
+        // Create a File object from the attachment
+        const file = new File(
+          [fileAttachment as any],
+          fileAttachment.name,
+          { type: fileAttachment.type }
+        );
+
+        // Upload to server
+        const response = await apiClient.uploadFile(file);
+
+        updatedFiles.push({
+          id: response.data.id,
+          name: response.data.originalName,
+          size: response.data.size,
+          type: response.data.mimetype,
+          url: `/uploads/${response.data.filename}`,
+        });
+      } catch (error) {
+        console.error('Failed to upload file:', error);
+      }
+    }
+
+    // Update block content with uploaded files
+    onUpdate(block.id, {
+      content: {
+        ...content,
+        files: [...files, ...updatedFiles],
+      },
+    });
+  };
+
+  const handleFileRemove = (fileId: string) => {
+    onUpdate(block.id, {
+      content: {
+        ...content,
+        files: files.filter(f => f.id !== fileId),
+      },
+    });
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
@@ -153,9 +208,65 @@ export function CodeBlock({
         spellCheck={false}
       />
 
-      <div className="text-xs text-gray-500 mt-2">
-        Press <kbd className="bg-gray-800 px-1 rounded">Shift+Enter</kbd> to
-        add a new block
+      {/* File Attachments */}
+      {files.length > 0 && (
+        <div className="mt-3 pt-3 border-t border-gray-700">
+          <div className="flex flex-wrap gap-2">
+            {files.map((file) => (
+              <div
+                key={file.id}
+                className="flex items-center gap-2 px-2 py-1 bg-gray-800 rounded-md border border-gray-700 text-xs text-gray-300"
+              >
+                <DocumentIcon className="w-3 h-3" />
+                <span className="max-w-[120px] truncate">{file.name}</span>
+                <button
+                  onClick={() => handleFileRemove(file.id)}
+                  className="hover:text-red-400"
+                  title="Remove"
+                >
+                  <XMarkIcon className="w-3 h-3" />
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* File Upload Toggle */}
+      {showFileUpload && (
+        <div className="mt-3 pt-3 border-t border-gray-700">
+          <FileUpload
+            onFilesSelected={handleFilesSelected}
+            onFileRemove={handleFileRemove}
+            acceptedTypes=".js,.ts,.jsx,.tsx,.py,.java,.cpp,.c,.cs,.go,.rs,.php,.rb,.swift,.kt,.sql,.html,.css,.json,.xml,.yaml,.yml,.md,.txt"
+            maxSize={5 * 1024 * 1024} // 5MB
+            maxFiles={3}
+            existingFiles={files.map(f => ({
+              id: f.id,
+              name: f.name,
+              size: f.size,
+              type: f.type,
+              url: f.url,
+              status: 'success' as const,
+            }))}
+          />
+        </div>
+      )}
+
+      {/* Bottom Bar */}
+      <div className="flex items-center justify-between mt-2">
+        <div className="text-xs text-gray-500">
+          Press <kbd className="bg-gray-800 px-1 rounded">Shift+Enter</kbd> to
+          add a new block
+        </div>
+
+        <button
+          onClick={() => setShowFileUpload(!showFileUpload)}
+          className="flex items-center gap-1 text-xs text-gray-400 hover:text-gray-200 transition"
+        >
+          <PaperClipIcon className="w-4 h-4" />
+          {showFileUpload ? 'Dosyaları Gizle' : 'Dosya Ekle'}
+        </button>
       </div>
     </div>
   );
