@@ -20,7 +20,7 @@ export class MentionsService {
     });
 
     if (!comment) {
-      throw new NotFoundException('Comment not found');
+      throw new NotFoundException('Yorum bulunamadı');
     }
 
     // Filter out duplicates and the author
@@ -165,11 +165,11 @@ export class MentionsService {
     });
 
     if (!mention) {
-      throw new NotFoundException('Mention not found');
+      throw new NotFoundException('Etiket bulunamadı');
     }
 
     if (mention.mentionedUserId !== userId) {
-      throw new ForbiddenException('You can only mark your own mentions as read');
+      throw new ForbiddenException('Sadece kendi etiketlerinizi okundu olarak işaretleyebilirsiniz');
     }
 
     await this.prisma.mention.update({

@@ -30,9 +30,10 @@ export function useSites() {
     try {
       setIsLoading(true);
       const response = await apiClient.client.get('/sites');
+      console.log('📍 Sites loaded:', response.data);
       setSites(response.data);
     } catch (err: any) {
-      console.error('Sites fetch error:', err);
+      console.error('❌ Sites fetch error:', err);
       if (err.response?.status === 401) {
         setError('Oturum süreniz doldu. Lütfen tekrar giriş yapın.');
       } else {

@@ -91,7 +91,7 @@ export class WorkspacesService {
     });
 
     if (!workspace) {
-      throw new NotFoundException('Workspace not found');
+      throw new NotFoundException('Çalışma alanı bulunamadı');
     }
 
     // Check if user is a member
@@ -115,7 +115,7 @@ export class WorkspacesService {
     });
 
     if (!membership) {
-      throw new ForbiddenException('You are not a member of this workspace');
+      throw new ForbiddenException('Bu çalışma alanının üyesi değilsiniz');
     }
 
     return {
@@ -141,14 +141,14 @@ export class WorkspacesService {
     });
 
     if (!membership) {
-      throw new ForbiddenException('You are not a member of this workspace');
+      throw new ForbiddenException('Bu çalışma alanının üyesi değilsiniz');
     }
 
     if (
       membership.role !== MemberRole.OWNER &&
       membership.role !== MemberRole.ADMIN
     ) {
-      throw new ForbiddenException('Only owners and admins can update workspace');
+      throw new ForbiddenException('Sadece sahipler ve yöneticiler çalışma alanını güncelleyebilir');
     }
 
     // Update workspace
@@ -188,11 +188,11 @@ export class WorkspacesService {
     });
 
     if (!membership) {
-      throw new ForbiddenException('You are not a member of this workspace');
+      throw new ForbiddenException('Bu çalışma alanının üyesi değilsiniz');
     }
 
     if (membership.role !== MemberRole.OWNER) {
-      throw new ForbiddenException('Only workspace owners can delete workspace');
+      throw new ForbiddenException('Sadece çalışma alanı sahipleri silebilir');
     }
 
     // Delete workspace (cascade will handle members and pages)
@@ -218,7 +218,7 @@ export class WorkspacesService {
     });
 
     if (!membership) {
-      throw new ForbiddenException('You are not a member of this workspace');
+      throw new ForbiddenException('Bu çalışma alanının üyesi değilsiniz');
     }
 
     const members = await this.prisma.workspaceMember.findMany({
@@ -264,14 +264,14 @@ export class WorkspacesService {
     });
 
     if (!membership) {
-      throw new ForbiddenException('You are not a member of this workspace');
+      throw new ForbiddenException('Bu çalışma alanının üyesi değilsiniz');
     }
 
     if (
       membership.role !== MemberRole.OWNER &&
       membership.role !== MemberRole.ADMIN
     ) {
-      throw new ForbiddenException('Only owners and admins can add members');
+      throw new ForbiddenException('Sadece sahipler ve yöneticiler üye ekleyebilir');
     }
 
     // Find user by email
@@ -280,7 +280,7 @@ export class WorkspacesService {
     });
 
     if (!userToAdd) {
-      throw new NotFoundException('User with this email not found');
+      throw new NotFoundException('Bu e-postaya sahip kullanıcı bulunamadı');
     }
 
     // Check if already a member
@@ -294,12 +294,12 @@ export class WorkspacesService {
     });
 
     if (existingMember) {
-      throw new ConflictException('User is already a member of this workspace');
+      throw new ConflictException('Kullanıcı zaten bu çalışma alanının üyesi');
     }
 
     // Cannot add another OWNER
     if (role === MemberRole.OWNER) {
-      throw new BadRequestException('Cannot add another owner to the workspace');
+      throw new BadRequestException('Çalışma alanına başka bir sahip eklenemez');
     }
 
     // Add member
@@ -352,7 +352,7 @@ export class WorkspacesService {
     });
 
     if (!membership || membership.role !== MemberRole.OWNER) {
-      throw new ForbiddenException('Only workspace owners can update member roles');
+      throw new ForbiddenException('Sadece çalışma alanı sahipleri üye rollerini güncelleyebilir');
     }
 
     // Get member to update
@@ -361,17 +361,17 @@ export class WorkspacesService {
     });
 
     if (!memberToUpdate || memberToUpdate.workspaceId !== workspaceId) {
-      throw new NotFoundException('Member not found in this workspace');
+      throw new NotFoundException('Üye bu çalışma alanında bulunamadı');
     }
 
     // Cannot change owner role
     if (memberToUpdate.role === MemberRole.OWNER) {
-      throw new BadRequestException('Cannot change workspace owner role');
+      throw new BadRequestException('Çalışma alanı sahibi rolü değiştirilemez');
     }
 
     // Cannot make someone else owner
     if (role === MemberRole.OWNER) {
-      throw new BadRequestException('Cannot add another owner to the workspace');
+      throw new BadRequestException('Çalışma alanına başka bir sahip eklenemez');
     }
 
     // Update role
@@ -414,7 +414,7 @@ export class WorkspacesService {
     });
 
     if (!membership) {
-      throw new ForbiddenException('You are not a member of this workspace');
+      throw new ForbiddenException('Bu çalışma alanının üyesi değilsiniz');
     }
 
     // Get member to remove
@@ -423,23 +423,23 @@ export class WorkspacesService {
     });
 
     if (!memberToRemove || memberToRemove.workspaceId !== workspaceId) {
-      throw new NotFoundException('Member not found in this workspace');
+      throw new NotFoundException('Üye bu çalışma alanında bulunamadı');
     }
 
     // Check permissions
     if (membership.role === MemberRole.OWNER) {
       // Owner can remove anyone except themselves
       if (memberToRemove.userId === userId) {
-        throw new BadRequestException('Workspace owner cannot leave. Transfer ownership first.');
+        throw new BadRequestException('Çalışma alanı sahibi ayrılamaz. Önce sahipliği devredin.');
       }
     } else if (membership.role === MemberRole.ADMIN) {
       // Admin can only remove guests
       if (memberToRemove.role !== MemberRole.GUEST) {
-        throw new ForbiddenException('Admins can only remove guests');
+        throw new ForbiddenException('Yöneticiler sadece misafirleri kaldırabilir');
       }
     } else {
       // Members and guests cannot remove anyone
-      throw new ForbiddenException('Only owners and admins can remove members');
+      throw new ForbiddenException('Sadece sahipler ve yöneticiler üyeleri kaldırabilir');
     }
 
     // Remove member

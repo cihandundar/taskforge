@@ -28,7 +28,7 @@ export class CommentsService {
     const { content, pageId } = createCommentDto;
 
     if (!pageId) {
-      throw new BadRequestException('pageId is required');
+      throw new BadRequestException('Sayfa kimliği gereklidir');
     }
 
     // Verify page access
@@ -38,7 +38,7 @@ export class CommentsService {
     });
 
     if (!page || page.isDeleted) {
-      throw new NotFoundException('Page not found or deleted');
+      throw new NotFoundException('Sayfa bulunamadı veya silinmiş');
     }
 
     // Check access permissions
@@ -55,7 +55,7 @@ export class CommentsService {
         }))) !== null;
 
     if (!hasAccess) {
-      throw new ForbiddenException('You do not have access to this page');
+      throw new ForbiddenException('Bu sayfaya erişiminiz yok');
     }
 
     // Create comment
@@ -107,7 +107,7 @@ export class CommentsService {
     });
 
     if (!page || page.isDeleted) {
-      throw new NotFoundException('Page not found or deleted');
+      throw new NotFoundException('Sayfa bulunamadı veya silinmiş');
     }
 
     const hasAccess =
@@ -123,7 +123,7 @@ export class CommentsService {
         }))) !== null;
 
     if (!hasAccess) {
-      throw new ForbiddenException('You do not have access to this page');
+      throw new ForbiddenException('Bu sayfaya erişiminiz yok');
     }
 
     // Get comments
@@ -167,7 +167,7 @@ export class CommentsService {
     });
 
     if (!comment) {
-      throw new NotFoundException('Comment not found');
+      throw new NotFoundException('Yorum bulunamadı');
     }
 
     // Check access permissions via page
@@ -185,7 +185,7 @@ export class CommentsService {
         }))) !== null;
 
     if (!hasAccess) {
-      throw new ForbiddenException('You do not have access to this comment');
+      throw new ForbiddenException('Bu yorkuma erişiminiz yok');
     }
 
     return comment;
@@ -200,7 +200,7 @@ export class CommentsService {
 
     // Only author can update
     if (comment.authorId !== userId) {
-      throw new ForbiddenException('Only comment author can update the comment');
+      throw new ForbiddenException('Sadece yorum sahibi yorumu güncelleyebilir');
     }
 
     // Update comment
@@ -244,7 +244,7 @@ export class CommentsService {
 
     // Only author can delete
     if (comment.authorId !== userId) {
-      throw new ForbiddenException('Only comment author can delete the comment');
+      throw new ForbiddenException('Sadece yorum sahibi yorumu silebilir');
     }
 
     // Delete comment
@@ -262,7 +262,7 @@ export class CommentsService {
       id: deletedComment.id,
     });
 
-    return { message: 'Comment deleted successfully' };
+    return { message: 'Yorum başarıyla silindi' };
   }
 
   /**
@@ -278,7 +278,7 @@ export class CommentsService {
     });
 
     if (page?.authorId !== userId) {
-      throw new ForbiddenException('Only page author can resolve comments');
+      throw new ForbiddenException('Sadece sayfa sahibi yorumları çözdü olarak işaretleyebilir');
     }
 
     // Resolve comment

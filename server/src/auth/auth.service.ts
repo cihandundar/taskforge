@@ -29,7 +29,7 @@ export class AuthService {
     });
 
     if (existingUser) {
-      throw new ConflictException('User with this email already exists');
+      throw new ConflictException('Bu e-posta adresi zaten kayıtlı');
     }
 
     // Hash password
@@ -74,18 +74,18 @@ export class AuthService {
     });
 
     if (!user) {
-      throw new UnauthorizedException('Invalid credentials');
+      throw new UnauthorizedException('Geçersiz kimlik bilgileri');
     }
 
     // Verify password
     const isPasswordValid = await bcrypt.compare(password, user.password);
 
     if (!isPasswordValid) {
-      throw new UnauthorizedException('Invalid credentials');
+      throw new UnauthorizedException('Geçersiz kimlik bilgileri');
     }
 
     if (!user.isActive) {
-      throw new UnauthorizedException('Account is disabled');
+      throw new UnauthorizedException('Hesap devre dışı');
     }
 
     // Generate tokens
@@ -119,13 +119,13 @@ export class AuthService {
       });
 
       if (!session || session.userId !== payload.sub) {
-        throw new UnauthorizedException('Invalid refresh token');
+        throw new UnauthorizedException('Geçersiz yenileme belirteci');
       }
 
       // Check if session is expired
       if (session.expiresAt < new Date()) {
         await this.prisma.session.delete({ where: { id: session.id } });
-        throw new UnauthorizedException('Refresh token expired');
+        throw new UnauthorizedException('Yenileme belirtecinin süresi doldu');
       }
 
       // Generate new tokens
@@ -141,7 +141,7 @@ export class AuthService {
 
       return tokens;
     } catch (error) {
-      throw new UnauthorizedException('Invalid refresh token');
+      throw new UnauthorizedException('Geçersiz yenileme belirteci');
     }
   }
 
@@ -181,7 +181,7 @@ export class AuthService {
     });
 
     if (!user) {
-      throw new UnauthorizedException('User not found');
+      throw new UnauthorizedException('Kullanıcı bulunamadı');
     }
 
     return user;

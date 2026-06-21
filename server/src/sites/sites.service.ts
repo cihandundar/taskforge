@@ -13,6 +13,7 @@ export class SitesService {
         name,
         url,
         color: color || 'blue',
+        isActive: true, // Explicitly set isActive to true
         userId,
       },
     });
@@ -20,7 +21,10 @@ export class SitesService {
 
   async getUserSites(userId: string) {
     return this.prisma.site.findMany({
-      where: { userId, isActive: true },
+      where: {
+        userId,
+        isActive: true
+      },
       orderBy: { createdAt: 'desc' },
     });
   }

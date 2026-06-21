@@ -197,6 +197,7 @@ export function LargeCalendar({ onDateSelect, selectedSiteId: propSelectedSiteId
   };
 
   const openNoteModal = (dateString: string, noteToEdit?: CalendarNote) => {
+    console.log('📝 Opening note modal:', { dateString, noteToEdit });
     setCurrentNoteDate(dateString);
     setEditingNoteId(noteToEdit?.id || null);
     setCurrentNoteText(noteToEdit?.note || '');
@@ -204,6 +205,7 @@ export function LargeCalendar({ onDateSelect, selectedSiteId: propSelectedSiteId
     setCurrentNoteSiteId(noteToEdit?.siteId || '');
     setCurrentNoteStatus(noteToEdit?.status || 'todo');
     setIsNoteModalOpen(true);
+    console.log('✅ Modal state set to true');
   };
 
   const isToday = (day: number) => {
@@ -335,34 +337,6 @@ export function LargeCalendar({ onDateSelect, selectedSiteId: propSelectedSiteId
               </button>
             </div>
 
-            {/* Site Filter */}
-            {sites.length > 0 && (
-              <div className="flex items-center bg-gray-100 rounded-xl p-1">
-                <button
-                  onClick={() => setSelectedSiteId('')}
-                  className={`
-                    px-3 py-2 rounded-lg text-sm font-medium transition
-                    ${selectedSiteId === '' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-600'}
-                  `}
-                >
-                  Tüm Siteler
-                </button>
-                {sites.map((site) => (
-                  <button
-                    key={site.id}
-                    onClick={() => setSelectedSiteId(site.id)}
-                    className={`
-                      px-3 py-2 rounded-lg text-sm font-medium transition flex items-center gap-1.5
-                      ${selectedSiteId === site.id ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-600'}
-                    `}
-                  >
-                    <span className={`w-2 h-2 rounded-full ${colorDots[site.color] || 'bg-gray-500'}`} />
-                    {site.name}
-                  </button>
-                ))}
-              </div>
-            )}
-
             {/* View Mode Toggle */}
             <div className="flex items-center bg-gray-100 rounded-xl p-1">
               <button
@@ -384,13 +358,6 @@ export function LargeCalendar({ onDateSelect, selectedSiteId: propSelectedSiteId
                 Tüm Takvimler
               </button>
             </div>
-
-            <button
-              onClick={goToToday}
-              className="px-6 py-3 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-xl transition"
-            >
-              Bugün
-            </button>
           </div>
         </div>
 
@@ -430,15 +397,19 @@ export function LargeCalendar({ onDateSelect, selectedSiteId: propSelectedSiteId
               <div
                 key={day}
                 className={`
-                  border-r border-b border-gray-200 p-3 min-h-[120px] cursor-pointer
+                  group border-r border-b border-gray-200 p-3 min-h-[120px] cursor-pointer
                   transition hover:bg-gray-50 relative
                   ${dayIsToday ? 'bg-blue-50' : 'bg-white'}
                 `}
+                onClick={() => selectDate(day)}
+                onDoubleClick={(e) => {
+                  e.stopPropagation();
+                  console.log('📝 Double clicked on date:', dateStr);
+                  openNoteModal(dateStr);
+                }}
               >
                 <div
                   className="flex items-center justify-between mb-2"
-                  onClick={() => selectDate(day)}
-                  onDoubleClick={() => openNoteModal(dateStr)}
                 >
                   <div className={`text-lg font-medium ${dayIsToday ? 'text-blue-600' : 'text-gray-900'}`}>
                     {day}
@@ -459,7 +430,7 @@ export function LargeCalendar({ onDateSelect, selectedSiteId: propSelectedSiteId
                   )}
                 </div>
 
-                <div className="space-y-1" onClick={() => selectDate(day)}>
+                <div className="space-y-1">
                   {dayNotes.slice(0, isExpanded ? undefined : 1).map((note) => {
                     const isMyNote = note.userId === user?.id;
                     const statusInfo = statusConfig[note.status];
@@ -551,7 +522,12 @@ export function LargeCalendar({ onDateSelect, selectedSiteId: propSelectedSiteId
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
+                    console.log('➕ Add note clicked for:', dateStr);
                     openNoteModal(dateStr);
+                  }}
+                  onDoubleClick={(e) => {
+                    e.stopPropagation();
+                    e.preventDefault();
                   }}
                   className="absolute bottom-2 right-2 w-6 h-6 flex items-center justify-center rounded-full bg-gray-200 hover:bg-gray-300 opacity-0 group-hover:opacity-100 transition text-gray-600 text-xs"
                   title="Yeni not ekle"
